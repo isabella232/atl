@@ -10,6 +10,7 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Level;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
@@ -118,7 +119,8 @@ public class AtlDebugTarget extends AtlDebugElement implements IDebugTarget {
 		try {
 			disassemblyMode = launch.getLaunchConfiguration().getAttribute(AtlLauncherTools.MODEDEBUG, false);
 		} catch (CoreException e) {
-			e.printStackTrace();
+			logger.log(Level.SEVERE, e.getLocalizedMessage(), e);
+//			e.printStackTrace();
 		}
 		state = stateDisconnected;
 		this.launch = launch;
@@ -126,7 +128,9 @@ public class AtlDebugTarget extends AtlDebugElement implements IDebugTarget {
 
 	public void start() {
 		
-		System.out.println(Messages.getString("AtlDebugTarget.CONNECTIONDEBUGEE"));
+		
+		logger.info(Messages.getString("AtlDebugTarget.CONNECTIONDEBUGEE"));
+//		System.out.println(Messages.getString("AtlDebugTarget.CONNECTIONDEBUGEE"));
 		try {
 			do {
 				try {
@@ -139,7 +143,8 @@ public class AtlDebugTarget extends AtlDebugElement implements IDebugTarget {
 							host = AtlDebugModelConstants.HOST;
 						socket = new Socket(host, Integer.parseInt(port));
 					} catch (CoreException e1) {
-						e1.printStackTrace();
+						logger.log(Level.SEVERE, e1.getLocalizedMessage(), e1);
+//						e1.printStackTrace();
 					}
 				}
 				catch(ConnectException ce) {
@@ -153,7 +158,8 @@ public class AtlDebugTarget extends AtlDebugElement implements IDebugTarget {
 			while(socket == null);
 			
 			debugger = new ADWPDebugger(socket.getInputStream(), socket.getOutputStream());
-			System.out.println(Messages.getString("AtlDebugTarget.CONNECTED")); //$NON-NLS-1$
+			logger.info(Messages.getString("AtlDebugTarget.CONNECTED")); //$NON-NLS-1$
+//			System.out.println(Messages.getString("AtlDebugTarget.CONNECTED")); //$NON-NLS-1$
 			state = stateSuspended;
 
 			threads = new AtlThread[1];
@@ -164,10 +170,12 @@ public class AtlDebugTarget extends AtlDebugElement implements IDebugTarget {
 				breakpointAdded(bpArray[i]);
 		}
 		catch (UnknownHostException e) {
-			e.printStackTrace();
+			logger.log(Level.SEVERE, e.getLocalizedMessage(), e);
+//			e.printStackTrace();
 		}
 		catch (IOException e) {
-			e.printStackTrace();
+			logger.log(Level.SEVERE, e.getLocalizedMessage(), e);
+//			e.printStackTrace();
 		}
 		
 		new Thread() {
@@ -214,7 +222,8 @@ public class AtlDebugTarget extends AtlDebugElement implements IDebugTarget {
 								
 								structFile = new AtlNbCharFile(file.getContents());
 							} catch (CoreException e1) {
-								e1.printStackTrace();
+								logger.log(Level.SEVERE, e1.getLocalizedMessage(), e1);
+//								e1.printStackTrace();
 							}
 
 //							frames[n - i] = cf = new AtlStackFrame(
@@ -235,7 +244,8 @@ public class AtlDebugTarget extends AtlDebugElement implements IDebugTarget {
 				try {
 					terminate();
 				} catch (DebugException e) {
-					e.printStackTrace();
+					logger.log(Level.SEVERE, e.getLocalizedMessage(), e);
+//					e.printStackTrace();
 				}
 			}
 		}.start();
@@ -254,7 +264,8 @@ public class AtlDebugTarget extends AtlDebugElement implements IDebugTarget {
 			enabled = (Boolean)ab.getMarker().getAttribute(IBreakpoint.ENABLED);
 		}
 		catch (CoreException e) {
-			e.printStackTrace();
+			logger.log(Level.SEVERE, e.getLocalizedMessage(), e);
+//			e.printStackTrace();
 			return;
 		}
 
@@ -277,7 +288,8 @@ public class AtlDebugTarget extends AtlDebugElement implements IDebugTarget {
 			enabled = (Boolean)ab.getMarker().getAttribute(IBreakpoint.ENABLED);
 		}
 		catch (CoreException e) {
-			e.printStackTrace();
+			logger.log(Level.SEVERE, e.getLocalizedMessage(), e);
+//			e.printStackTrace();
 			return;
 		}
 
@@ -303,7 +315,8 @@ public class AtlDebugTarget extends AtlDebugElement implements IDebugTarget {
 			location = (String)ab.getMarker().getAttribute(IMarker.LOCATION);
 		}
 		catch (CoreException e) {
-			e.printStackTrace();
+			logger.log(Level.SEVERE, e.getLocalizedMessage(), e);
+//			e.printStackTrace();
 			return;
 		}
 
@@ -576,7 +589,8 @@ public class AtlDebugTarget extends AtlDebugElement implements IDebugTarget {
 			debugEvents[0] = event;
 			DebugPlugin.getDefault().fireDebugEventSet(debugEvents);
 		} catch (DebugException e) {
-			e.printStackTrace();
+			logger.log(Level.SEVERE, e.getLocalizedMessage(), e);
+//			e.printStackTrace();
 		}
 	}
 

@@ -3,8 +3,8 @@
  */
 package org.eclipse.m2m.atl.adt.debug.core;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.io.StringBufferInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -345,7 +345,9 @@ public class AtlStackFrame extends AtlDebugElement implements IStackFrame {
 		 * @see org.eclipse.core.resources.IStorage#getContents()
 		 */
 		public InputStream getContents() throws CoreException {
-			return new StringBufferInputStream(contents);
+			byte[] buffer = new byte[contents.length()];
+			System.arraycopy(contents.toCharArray(), 0, buffer, 0, contents.length() - 1);
+			return new ByteArrayInputStream(buffer);
 		}
 
 		/* (non-Javadoc)

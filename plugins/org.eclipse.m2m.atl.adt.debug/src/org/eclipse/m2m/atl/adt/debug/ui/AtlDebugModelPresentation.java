@@ -7,6 +7,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
@@ -31,6 +33,7 @@ import org.eclipse.m2m.atl.adt.debug.core.AtlStackFrame;
 import org.eclipse.m2m.atl.adt.debug.core.AtlThread;
 import org.eclipse.m2m.atl.adt.debug.core.AtlVariable;
 import org.eclipse.m2m.atl.adt.launching.AtlLauncherTools;
+import org.eclipse.m2m.atl.engine.vm.ATLVMPlugin;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.IEditorDescriptor;
 import org.eclipse.ui.IEditorInput;
@@ -52,6 +55,8 @@ import org.eclipse.ui.part.FileEditorInput;
  */
 
 public class AtlDebugModelPresentation extends LabelProvider implements IDebugModelPresentation {
+
+	protected static Logger logger = Logger.getLogger(ATLVMPlugin.LOGGER);
 
 	static final URL BASE_URL = AtlDebugPlugin.getDefault().getBundle().getEntry("/");
 	static final String iconPath = "icons/";
@@ -175,7 +180,8 @@ public class AtlDebugModelPresentation extends LabelProvider implements IDebugMo
 				name = target.getName();
 			}
 			catch (DebugException e) {
-				e.printStackTrace();
+				logger.log(Level.SEVERE, e.getLocalizedMessage(), e);
+//				e.printStackTrace();
 			}
 			return name + Messages.getString("AtlDebugModelPresentation.CONNECTEDONHOST")+ target.getHost() + Messages.getString("AtlDebugModelPresentation.PORT") + target.getPort(); //$NON-NLS-1$ //$NON-NLS-2$
 		}
@@ -224,7 +230,8 @@ public class AtlDebugModelPresentation extends LabelProvider implements IDebugMo
 				else
 					return typeVar + " " + atlVar.getName() + " = " + atlVar.getReferenceTypeName() + " (id = " + atlVar.getIdVariable() + ")";
 			} catch (DebugException e) {
-				e.printStackTrace();
+				logger.log(Level.SEVERE, e.getLocalizedMessage(), e);
+//				e.printStackTrace();
 			}
 		}
 		else if (item instanceof AtlBreakpoint)	{
@@ -238,7 +245,8 @@ public class AtlDebugModelPresentation extends LabelProvider implements IDebugMo
 				return location + " [line: " + lineNumber + ", charStart: " + charStart + ", charEnd: " + charEnd + "]";
 			}
 			catch (CoreException e) {
-				e.printStackTrace();
+				logger.log(Level.SEVERE, e.getLocalizedMessage(), e);
+//				e.printStackTrace();
 			}
 		}
 
@@ -254,7 +262,8 @@ public class AtlDebugModelPresentation extends LabelProvider implements IDebugMo
 			listener.detailComputed(value,value.getValueString());
 		}
 		catch (DebugException e) {
-			e.printStackTrace();
+			logger.log(Level.SEVERE, e.getLocalizedMessage(), e);
+//			e.printStackTrace();
 		}
 	}
 	
@@ -351,7 +360,8 @@ public class AtlDebugModelPresentation extends LabelProvider implements IDebugMo
 				return i;
 			}
 			catch (CoreException e) {
-				e.printStackTrace();
+				logger.log(Level.SEVERE, e.getLocalizedMessage(), e);
+//				e.printStackTrace();
 			}
 		}
 		else if(element instanceof AtlBreakpoint) {
