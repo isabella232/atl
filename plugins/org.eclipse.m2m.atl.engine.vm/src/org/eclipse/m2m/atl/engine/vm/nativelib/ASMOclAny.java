@@ -3,8 +3,10 @@ package org.eclipse.m2m.atl.engine.vm.nativelib;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Logger;
 
 import org.eclipse.m2m.atl.engine.vm.ASMExecEnv;
+import org.eclipse.m2m.atl.engine.vm.ATLVMPlugin;
 import org.eclipse.m2m.atl.engine.vm.Operation;
 import org.eclipse.m2m.atl.engine.vm.StackFrame;
 
@@ -14,6 +16,7 @@ import org.eclipse.m2m.atl.engine.vm.StackFrame;
 public class ASMOclAny extends ASMNativeObject {
 
 	public static ASMOclType myType = getOclAnyType();
+	protected static Logger logger = Logger.getLogger(ATLVMPlugin.LOGGER);
 
 	static {
 		ASMOclType.myType.addSupertype(getOclAnyType());
@@ -191,17 +194,20 @@ public class ASMOclAny extends ASMNativeObject {
 	}
 
 	public static void output(StackFrame frame, ASMOclAny self) {
-		System.out.println(self);
+		logger.info(self.toString());
+//		System.out.println(self);
 	}
 
 	public static ASMOclAny debug(StackFrame frame, ASMOclAny self, ASMString msg) {
-		System.out.println(msg.getSymbol() + ": " + self.toString());
+		logger.info(msg.getSymbol() + ": " + self.toString());
+//		System.out.println(msg.getSymbol() + ": " + self.toString());
 		return self;
 	}
 
 	public static ASMOclAny check(StackFrame frame, ASMOclAny self, ASMString msg, ASMBoolean cond) {
 		if(!cond.getSymbol()) {
-			System.out.println(msg.getSymbol());
+			logger.info(msg.getSymbol());
+//			System.out.println(msg.getSymbol());
 		}
 		return self;
 	}

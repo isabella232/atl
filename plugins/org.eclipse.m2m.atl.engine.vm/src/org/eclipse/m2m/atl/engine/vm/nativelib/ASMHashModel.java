@@ -40,7 +40,8 @@ public class ASMHashModel extends ASMModel {
 	}
 
 	public ASMModelElement findModelElement(String name) {
-		System.out.println("ERROR: can't use ASMHashModel as a meta-model so far.");
+		logger.severe("ERROR: can't use ASMHashModel as a meta-model so far.");
+//		System.out.println("ERROR: can't use ASMHashModel as a meta-model so far.");
 		return null;
 	}
 

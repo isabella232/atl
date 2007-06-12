@@ -92,7 +92,8 @@ public class ASMOperation extends Operation {
 	public void addVariableInstruction(ASMInstructionWithOperand instruction, String varId) {
 		LocalVariableEntry lve = (LocalVariableEntry)localVariableEntries.get(varId);
 		if(lve == null) {
-			System.out.println("ERROR: no slot reserved for variable: " + varId + " used at " + lastLNE + ".");
+			logger.severe("ERROR: no slot reserved for variable: " + varId + " used at " + lastLNE + ".");
+//			System.out.println("ERROR: no slot reserved for variable: " + varId + " used at " + lastLNE + ".");
 		}
 		instruction.setOperand("" + lve.slot);
 		instructions.add(instruction);
@@ -177,16 +178,16 @@ public class ASMOperation extends Operation {
 
 			frame.step();
 
-			if(mn.equals("push")) {
+			if(mn == "push") {
 				frame.push(op);
-			} else if(mn.equals("pop")) {
+			} else if(mn == "pop") {
 				frame.pop();
-			} else if(mn.equals("swap")) {
+			} else if(mn == "swap") {
 				ASMOclAny o1 = frame.pop();
 				ASMOclAny o2 = frame.pop();
 				frame.push(o1);
 				frame.push(o2);
-			} else if(mn.equals("new")) {
+			} else if(mn == "new") {
 				String mname = ((ASMString)frame.pop()).getSymbol();
 				String me = ((ASMString)frame.pop()).getSymbol();
 				if(mname.equals("#native")) {
@@ -215,7 +216,7 @@ public class ASMOperation extends Operation {
 //						}
 //					}
 				}
-			} else if(mn.equals("call")) {
+			} else if(mn == "call") {
 				int nb = getNbArgs(ops);
 				String opName = getOpName(ops);
 				ArrayList arguments = new ArrayList();
@@ -227,7 +228,7 @@ public class ASMOperation extends Operation {
 				if(ret != null) {
 					frame.push(ret);
 				}
-			} else if(mn.equals("supercall")) {
+			} else if(mn == "supercall") {
 				int nb = getNbArgs(ops);
 				String opName = getOpName(ops);
 				ArrayList arguments = new ArrayList();
@@ -239,19 +240,19 @@ public class ASMOperation extends Operation {
 				if(ret != null) {
 					frame.push(ret);
 				}
-			} else if(mn.equals("store")) {
+			} else if(mn == "store") {
 				frame.popVariable(ops);
-			} else if(mn.equals("load")) {
+			} else if(mn == "load") {
 				frame.pushVariable(ops);
-			} else if(mn.equals("dup")) {
+			} else if(mn == "dup") {
 				frame.push(frame.peek());
-			} else if(mn.equals("dup_x1")) {
+			} else if(mn == "dup_x1") {
 				ASMOclAny val1 = frame.pop();
 				ASMOclAny val2 = frame.pop();
 				frame.push(val1);
 				frame.push(val2);
 				frame.push(val1);
-			} else if(mn.equals("findme")) {
+			} else if(mn == "findme") {
 				String mname = ((ASMString)frame.pop()).getSymbol();
 				String name = ((ASMString)frame.pop()).getSymbol();
 				if(mname.equals("#native")) {
@@ -279,35 +280,35 @@ public class ASMOperation extends Operation {
 					}
 					frame.push(ame);
 				}
-			} else if(mn.equals("get")) {
+			} else if(mn == "get") {
 				frame.push((frame.pop()).get(frame, ops));
-			} else if(mn.equals("set")) {
+			} else if(mn == "set") {
 				ASMOclAny value = frame.pop();
 				ASMOclAny o = frame.pop();
 				o.set(frame, ops, value);
-			} else if(mn.equals("pushi")) {
+			} else if(mn == "pushi") {
 				ASMInteger ai = new ASMInteger(Integer.parseInt(ops));
 				frame.push(ai);
-			} else if(mn.equals("pushd")) {
+			} else if(mn == "pushd") {
 				ASMReal ar = new ASMReal(Double.parseDouble(ops));
 				frame.push(ar);
-			} else if(mn.equals("pusht")) {
+			} else if(mn == "pusht") {
 				frame.push(new ASMBoolean(true));
-			} else if(mn.equals("pushf")) {
+			} else if(mn == "pushf") {
 				frame.push(new ASMBoolean(false));
-			} else if(mn.equals("enditerate")) {
+			} else if(mn == "enditerate") {
 				return;
-			} else if(mn.equals("if")) {
+			} else if(mn == "if") {
 				if(((ASMBoolean)frame.pop()).getSymbol()) {
 					int target = Integer.parseInt(ops);
 					frame.setLocation(target - 1);
 				}
-			} else if(mn.equals("goto")) {
+			} else if(mn == "goto") {
 				int target = Integer.parseInt(ops);
 				frame.setLocation(target - 1);
-			} else if(mn.equals("getasm")) {
+			} else if(mn == "getasm") {
 				frame.push(((ASMExecEnv)frame.getExecEnv()).getASMModule());
-			} else if(mn.equals("iterate")) {
+			} else if(mn == "iterate") {
 				ASMOclAny v = frame.pop();
 				if(!(v instanceof ASMCollection)) {
 					frame.printStackTrace("cannot iterate on non-collection");
@@ -443,7 +444,8 @@ public class ASMOperation extends Operation {
 	public int endLocalVariableEntry(String id) {
 		LocalVariableEntry lve = (LocalVariableEntry)localVariableEntries.remove(id);
 		if(lve == null) {
-			System.out.println("ERROR: variable id not defined: " + id);
+			logger.severe("ERROR: variable id not defined: " + id);
+//			System.out.println("ERROR: variable id not defined: " + id);
 		}
 		lve.end = instructions.size() - 1;
 		localVariableTable.add(lve);

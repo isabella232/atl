@@ -5,6 +5,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.eclipse.m2m.atl.engine.vm.nativelib.ASMModel;
 
@@ -12,6 +14,8 @@ import org.eclipse.m2m.atl.engine.vm.nativelib.ASMModel;
  * @author Frédéric Jouault
  */
 public class ASMProjector {
+
+	protected static Logger logger = Logger.getLogger(ATLVMPlugin.LOGGER);
 
 	private static void showUsage() {
 		System.out.println("Usage : org.eclipse.m2m.atl.engine.vm.ASMProjector copy=true source=IN:MM target= ...");
@@ -24,13 +28,20 @@ public class ASMProjector {
 
 		long start = new Date().getTime();
 
-		Map params = parseCommandLine(args);
+		Map params = null;
+		try {
+			params = parseCommandLine(args);
+		} catch (Exception e) {
+			showUsage();
+			throw e;
+		}
 		String plugins = (String)params.get("plugins");
 		if(plugins != null) {
 			String ss[] = plugins.split(",");
 			for(Iterator i = Arrays.asList(ss).iterator() ; i.hasNext() ; ) {
 				String plg = (String)i.next();
-				System.out.println("Loading plugin: " + plg);
+				logger.info("Loading plugin: " + plg);
+//				System.out.println("Loading plugin: " + plg);
 				pcl.addLocation(plg);
 			}
 		}
@@ -49,16 +60,19 @@ public class ASMProjector {
 			ml.addInjector("ebnf", pcl.loadClass("org.atl.engine.injectors.ebnf.EBNFInjector"));
 			ml.addInjector("ebnf2", pcl.loadClass("org.atl.engine.injectors.ebnf.EBNFInjector2"));
 		} catch(Exception e) {
+			logger.log(Level.SEVERE, e.getLocalizedMessage(), e);
 			//e.printStackTrace(System.out);
 		}
 		try {
 			ml.addExtractor("ebnf", pcl.loadClass("org.atl.engine.extractors.ebnf.EBNFExtractor"));
 		} catch(Exception e) {
+			logger.log(Level.SEVERE, e.getLocalizedMessage(), e);
 			//e.printStackTrace(System.out);
 		}
 		try {
 			ml.addInjector("bin", pcl.loadClass("org.atl.engine.injectors.bin.BINInjector"));
 		} catch(Exception e) {
+			logger.log(Level.SEVERE, e.getLocalizedMessage(), e);
 			//e.printStackTrace(System.out);
 		}
 
