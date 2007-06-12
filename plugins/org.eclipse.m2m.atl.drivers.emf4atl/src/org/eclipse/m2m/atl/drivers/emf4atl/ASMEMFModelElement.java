@@ -9,6 +9,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.common.util.Enumerator;
@@ -22,6 +24,7 @@ import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.util.FeatureMap;
 import org.eclipse.emf.ecore.util.FeatureMapUtil;
 import org.eclipse.emf.ecore.xmi.XMIResource;
+import org.eclipse.m2m.atl.engine.vm.ATLVMPlugin;
 import org.eclipse.m2m.atl.engine.vm.ClassNativeOperation;
 import org.eclipse.m2m.atl.engine.vm.Operation;
 import org.eclipse.m2m.atl.engine.vm.StackFrame;
@@ -46,7 +49,9 @@ import org.eclipse.m2m.atl.engine.vm.nativelib.ASMTuple;
  * @author Frédéric Jouault
  */
 public class ASMEMFModelElement extends ASMModelElement {
-	
+
+	protected static Logger logger = Logger.getLogger(ATLVMPlugin.LOGGER);
+
 	// only for metamodels...?
 	public ASMBoolean conformsTo(ASMOclType other) {
 		boolean ret = false;
@@ -59,7 +64,8 @@ public class ASMEMFModelElement extends ASMModelElement {
 				try {
 					ret = o.equals(t) || ((EClass)o).isSuperTypeOf((EClass)t);
 				} catch(Exception e) {
-					e.printStackTrace(System.out);
+					logger.log(Level.SEVERE, e.getLocalizedMessage(), e);
+//					e.printStackTrace(System.out);
 				}
 			}
 		}
@@ -89,7 +95,8 @@ public class ASMEMFModelElement extends ASMModelElement {
 			try {
 				ret = ((ASMEMFModel)getModel()).getASMModelElement(((EClass)t).getEStructuralFeature(name));
 			} catch(Exception e) {
-				e.printStackTrace(System.out);
+				logger.log(Level.SEVERE, e.getLocalizedMessage(), e);
+//				e.printStackTrace(System.out);
 			}
 		}
 
@@ -122,11 +129,6 @@ public class ASMEMFModelElement extends ASMModelElement {
 			if(sf == null) {
 				frame.printStackTrace("feature " + name + " does not exist on " + getType());
 			}
-/*
-			if(sf.isDerived()) {
-				frame.printStackTrace("feature " + name + " is derived");			
-			}
-*/
 			ret = emf2ASM(frame, object.eGet(sf));
 		}
 		return ret;
@@ -214,10 +216,13 @@ public class ASMEMFModelElement extends ASMModelElement {
     }
     
 	public void set(StackFrame frame, String name, ASMOclAny value) {
-		final boolean debug = false;
-//		final boolean checkSameModel = !true;
+
+final boolean debug = false;
+//final boolean checkSameModel = !true;
 		
-		if(debug) System.out.println("Setting: " + this + " : " + getType() + "." + name + " to " + value);
+if(debug) logger.info("Setting: " + this + " : " + getType() + "." + name + " to " + value);
+//if(debug) System.out.println("Setting: " + this + " : " + getType() + "." + name + " to " + value);
+
 		super.set(frame, name, value);
 		EStructuralFeature feature = object.eClass().getEStructuralFeature(name);
 		if(feature == null) {
@@ -422,7 +427,8 @@ public class ASMEMFModelElement extends ASMModelElement {
 			// Operations on MOF!AssociationEnd
 //			registerMOFOperation("AssociationEnd", "otherEnd", new Class[] {});
 		} catch(Exception e) {
-			e.printStackTrace(System.out);
+			logger.log(Level.SEVERE, e.getLocalizedMessage(), e);
+//			e.printStackTrace(System.out);
 		}
 	}
 	
@@ -432,7 +438,7 @@ public class ASMEMFModelElement extends ASMModelElement {
 		
 		ASMModel model = (ASMModel)frame.getModels().get(modelName.getSymbol());
 		if(model instanceof ASMEMFModel) {
-																				//TODO: test new version, was: getIDToEObjectMap().get(id.getSymbol());
+			//TODO: test new version, was: getIDToEObjectMap().get(id.getSymbol());
 			EObject eo = (EObject)((XMIResource)((ASMEMFModel)model).getExtent()).getEObject(id.getSymbol());
 			if(eo != null)
 				ret = ((ASMEMFModel)model).getASMModelElement(eo);
@@ -454,30 +460,38 @@ final boolean debug = false;
 		ASMOrderedSet aret = new ASMOrderedSet();
 		Collection ret = aret.collection();
 
-if(debug) System.out.println(self + ".allInstancesFrom(" + ((sourceModelName == null) ? "null" : "\"" + sourceModelName + "\"") + ")");
+if(debug) logger.info(self + ".allInstancesFrom(" + ((sourceModelName == null) ? "null" : "\"" + sourceModelName + "\"") + ")");
+//if(debug) System.out.println(self + ".allInstancesFrom(" + ((sourceModelName == null) ? "null" : "\"" + sourceModelName + "\"") + ")");
 		
 		//if(self.object.eClass().equals()) {
 			for(Iterator i = frame.getModels().keySet().iterator() ; i.hasNext() ; ) {
 				String mname = (String)i.next();
 
-if(debug) System.out.println("\ttrying: " + mname);
+if(debug) logger.info("\ttrying: " + mname);
+//if(debug) System.out.println("\ttrying: " + mname);
 
 				if((sourceModelName != null) && !mname.equals(sourceModelName.getSymbol())) continue;
 				ASMModel am = (ASMModel)frame.getModels().get(mname);
 
-if(debug) System.out.println("\t\tfound: " + am.getName());
-if(debug) System.out.println("\t\tam.getMetamodel() = " + am.getMetamodel().hashCode());
-if(debug) System.out.println("\t\tself.getModel() = " + self.getModel().hashCode());
-if(debug) System.out.println("\t\tam.getMetamodel().equals(self.getModel()) = " + am.getMetamodel().equals(self.getModel()));
+if(debug) logger.info("\t\tfound: " + am.getName());
+if(debug) logger.info("\t\tam.getMetamodel() = " + am.getMetamodel().hashCode());
+if(debug) logger.info("\t\tself.getModel() = " + self.getModel().hashCode());
+if(debug) logger.info("\t\tam.getMetamodel().equals(self.getModel()) = " + am.getMetamodel().equals(self.getModel()));
+//if(debug) System.out.println("\t\tfound: " + am.getName());
+//if(debug) System.out.println("\t\tam.getMetamodel() = " + am.getMetamodel().hashCode());
+//if(debug) System.out.println("\t\tself.getModel() = " + self.getModel().hashCode());
+//if(debug) System.out.println("\t\tam.getMetamodel().equals(self.getModel()) = " + am.getMetamodel().equals(self.getModel()));
 
 				if(!am.getMetamodel().equals(self.getModel())) continue;
 
-if(debug) System.out.println("\t\t\tsearching on: " + am.getName());
+if(debug) logger.info("\t\t\tsearching on: " + am.getName());
+//if(debug) System.out.println("\t\t\tsearching on: " + am.getName());
 
 				Set elems = am.getElementsByType(self);
 				ret.addAll(elems);
 
-if(debug) System.out.println("\t\t\t\tfound: " + elems);
+if(debug) logger.info("\t\t\t\tfound: " + elems);
+//if(debug) System.out.println("\t\t\t\tfound: " + elems);
 
 			}
 		//}
@@ -488,13 +502,7 @@ if(debug) System.out.println("\t\t\t\tfound: " + elems);
 	public static ASMModelElement newInstance(StackFrame frame, ASMEMFModelElement self) {
 		ASMModelElement ret = null;
 		if(self.object.eClass().getName().equals("EClass")) {
-			for (Iterator j = frame.getExecEnv().getModels().values().iterator(); j.hasNext();) {
-				ASMModel model = (ASMModel)j.next();
-				if (model.getMetamodel().equals(self.getModel()) && model.isTarget()) {
-					ret = model.newModelElement(self);
-					break;
-				}
-			}
+			ret = createNewInstance(frame, self);
 		}
 		
 //		if(self.object.eClass().getName().equals("EClass")) {
