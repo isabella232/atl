@@ -13,17 +13,15 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 
 import org.atl.engine.injectors.ebnf.EBNFInjector2;
-import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtension;
 import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
-import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
@@ -95,13 +93,10 @@ public class AtlEMFModelHandler extends AtlModelHandler {
             } else {
                 r.save(options);
             }
-    		IFile file = ResourcesPlugin.getWorkspace().getRoot().getFile(new Path(uri.path()));
-    		file.setDerived(true);
         } catch (IOException e1) {
-            e1.printStackTrace();
-        } catch (CoreException e) {
-			e.printStackTrace();
-		}
+			logger.log(Level.SEVERE, e1.getLocalizedMessage(), e1);
+//            e1.printStackTrace();
+        }
     }
     
 	protected AtlEMFModelHandler() {
@@ -124,7 +119,8 @@ public class AtlEMFModelHandler extends AtlModelHandler {
 						try {
 							ml.addInjector(elements[j].getAttribute("name"), elements[j].createExecutableExtension("class").getClass());
 						} catch (CoreException e){
-							e.printStackTrace();
+							logger.log(Level.SEVERE, e.getLocalizedMessage(), e);
+//							e.printStackTrace();
 						}				
 					}
 				 }
@@ -137,7 +133,8 @@ public class AtlEMFModelHandler extends AtlModelHandler {
 		try {
 			atlmm = ASMEMFModel.loadASMEMFModel("ATL", mofmm, atlurl, ml);
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.log(Level.SEVERE, e.getLocalizedMessage(), e);
+//			e.printStackTrace();
 		}
 	}
 	
@@ -155,7 +152,8 @@ public class AtlEMFModelHandler extends AtlModelHandler {
 		try {
 			ret = ASMEMFModel.loadASMEMFModel(name, (ASMEMFModel)metamodel, in, ml);
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.log(Level.SEVERE, e.getLocalizedMessage(), e);
+//			e.printStackTrace();
 		}
 
 		return ret;
@@ -167,7 +165,8 @@ public class AtlEMFModelHandler extends AtlModelHandler {
 		try {
 			ret = ASMEMFModel.loadASMEMFModel(name, (ASMEMFModel)metamodel, uri, ml);
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.log(Level.SEVERE, e.getLocalizedMessage(), e);
+//			e.printStackTrace();
 		}
 
 		return ret;
@@ -179,7 +178,8 @@ public class AtlEMFModelHandler extends AtlModelHandler {
 		try {
 			ret = ASMEMFModel.loadASMEMFModel(name, (ASMEMFModel)metamodel, uri, ml);
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.log(Level.SEVERE, e.getLocalizedMessage(), e);
+//			e.printStackTrace();
 		}
 
 		return ret;
@@ -194,7 +194,8 @@ public class AtlEMFModelHandler extends AtlModelHandler {
 		try {
 			ret = ASMEMFModel.newASMEMFModel(name, (ASMEMFModel)metamodel, ml);
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.log(Level.SEVERE, e.getLocalizedMessage(), e);
+//			e.printStackTrace();
 		}
 		
 		return ret;
@@ -213,7 +214,8 @@ public class AtlEMFModelHandler extends AtlModelHandler {
         try {
             ret = ASMEMFModel.newASMEMFModel(name, uri, (ASMEMFModel)metamodel, ml);
         } catch (Exception e) {
-            e.printStackTrace();
+			logger.log(Level.SEVERE, e.getLocalizedMessage(), e);
+//            e.printStackTrace();
         }
         
         return ret;
@@ -230,7 +232,8 @@ public class AtlEMFModelHandler extends AtlModelHandler {
 			try {
 				ret = loadModel(name, mofmm, mmurl.openStream());
 			} catch (IOException e) {
-				e.printStackTrace();
+				logger.log(Level.SEVERE, e.getLocalizedMessage(), e);
+//				e.printStackTrace();
 			}
 			bimm.put(name, ret);
 		}

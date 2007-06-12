@@ -13,6 +13,8 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.eclipse.m2m.atl.engine.vm.ASM;
 import org.eclipse.m2m.atl.engine.vm.ASMExecEnv;
@@ -20,6 +22,7 @@ import org.eclipse.m2m.atl.engine.vm.ASMInterpreter;
 import org.eclipse.m2m.atl.engine.vm.ASMOperation;
 import org.eclipse.m2m.atl.engine.vm.ASMStackFrame;
 import org.eclipse.m2m.atl.engine.vm.ASMXMLReader;
+import org.eclipse.m2m.atl.engine.vm.ATLVMPlugin;
 import org.eclipse.m2m.atl.engine.vm.Debugger;
 import org.eclipse.m2m.atl.engine.vm.NetworkDebugger;
 import org.eclipse.m2m.atl.engine.vm.SimpleDebugger;
@@ -32,6 +35,7 @@ import org.eclipse.m2m.atl.engine.vm.nativelib.ASMModule;
  */
 public class AtlLauncher {
 	
+	protected static Logger logger = Logger.getLogger(ATLVMPlugin.LOGGER);
 	private static AtlLauncher defaultLauncher = null;
 	
 	public static AtlLauncher getDefault() {
@@ -60,7 +64,6 @@ public class AtlLauncher {
 	 * @param models Map of model names mapped to (input and output) ASMModels
 	 * @param asmParams Voodoo parameters - always use Collections.EMPTY_MAP
 	 * @param superimpose List of URLs to superimposed .asm transformation modules
-	 * @deprecated
 	 */
     public Object launch(URL asmurl, Map libraries, Map models, Map asmParams, List superimpose) {
 		return launch(asmurl, libraries, models, asmParams, superimpose, Collections.EMPTY_MAP);
@@ -100,7 +103,8 @@ public class AtlLauncher {
 			ASM asm = new ASMXMLReader().read(new BufferedInputStream(asmurl.openStream()));
 			return launch(asm, libraries, models, asmParams, superimpose, options, debugger);
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.log(Level.SEVERE, e.getLocalizedMessage(), e);
+//			e.printStackTrace();
 		}
 		return null;
 	}
@@ -148,14 +152,18 @@ public class AtlLauncher {
     		long startTime = System.currentTimeMillis();
 			ASMInterpreter ai = new ASMInterpreter(asm, asmModule, env, asmParams);
 			long endTime = System.currentTimeMillis();
-			if(printExecutionTime && !(debugger instanceof NetworkDebugger))
-				System.out.println(asm.getName() + " executed in " + ((endTime - startTime) / 1000.) + "s.");
+			if(printExecutionTime && !(debugger instanceof NetworkDebugger)) {
+				logger.info(asm.getName() + " executed in " + ((endTime - startTime) / 1000.) + "s.");
+//				System.out.println(asm.getName() + " executed in " + ((endTime - startTime) / 1000.) + "s.");
+			}
 
 			ret = ai.getReturnValue();
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.log(Level.SEVERE, e.getLocalizedMessage(), e);
+//			e.printStackTrace();
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.log(Level.SEVERE, e.getLocalizedMessage(), e);
+//			e.printStackTrace();
 		}
 		
 		return ret;

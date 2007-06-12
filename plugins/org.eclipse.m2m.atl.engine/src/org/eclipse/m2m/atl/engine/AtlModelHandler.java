@@ -11,6 +11,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
@@ -19,6 +21,7 @@ import org.eclipse.core.runtime.IExtension;
 import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.m2m.atl.engine.vm.ATLVMPlugin;
 import org.eclipse.m2m.atl.engine.vm.nativelib.ASMModel;
 
 /**
@@ -27,6 +30,8 @@ import org.eclipse.m2m.atl.engine.vm.nativelib.ASMModel;
  */
 public abstract class AtlModelHandler {
 	
+	protected static Logger logger = Logger.getLogger(ATLVMPlugin.LOGGER);
+
 //	public final static String AMH_MDR = "MDR";
 	public final static String AMH_EMF = "EMF";
 
@@ -68,7 +73,8 @@ public abstract class AtlModelHandler {
 								break extensions;
 							}
 						} catch (CoreException e){
-							e.printStackTrace();
+							logger.log(Level.SEVERE, e.getLocalizedMessage(), e);
+//							e.printStackTrace();
 						}				
 					}
 				 }
