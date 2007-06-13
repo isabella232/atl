@@ -124,8 +124,6 @@ public class AtlLauncher {
 				String mname = (String)i.next();
 				env.addModel(mname, (ASMModel)models.get(mname));
 			}
-
-			env.registerOperations(asm);
 			
 			for(Iterator i = libraries.keySet().iterator() ; i.hasNext() ; ) {
 				String lname = (String)i.next();
@@ -138,6 +136,9 @@ public class AtlLauncher {
 				if(op != null)
 					op.exec(ASMStackFrame.rootFrame(env, op, Arrays.asList(new Object[] {asmModule})));
 			}
+
+			// Register module operations AFTER lib operations to avoid overwriting 'main'
+			env.registerOperations(asm);
 
             for(Iterator i = superimpose.iterator() ; i.hasNext() ; ) {
                 URL url = (URL)i.next();
