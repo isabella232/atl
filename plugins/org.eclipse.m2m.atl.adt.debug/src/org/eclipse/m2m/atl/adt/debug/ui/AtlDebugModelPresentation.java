@@ -13,13 +13,8 @@ import java.util.logging.Logger;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IStorage;
-import org.eclipse.core.resources.IWorkspace;
-import org.eclipse.core.resources.IWorkspaceRoot;
-import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.Path;
 import org.eclipse.debug.core.DebugException;
-import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.model.IValue;
 import org.eclipse.debug.ui.IDebugModelPresentation;
 import org.eclipse.debug.ui.IValueDetailListener;
@@ -32,7 +27,6 @@ import org.eclipse.m2m.atl.adt.debug.core.AtlDebugTarget;
 import org.eclipse.m2m.atl.adt.debug.core.AtlStackFrame;
 import org.eclipse.m2m.atl.adt.debug.core.AtlThread;
 import org.eclipse.m2m.atl.adt.debug.core.AtlVariable;
-import org.eclipse.m2m.atl.adt.launching.AtlLauncherTools;
 import org.eclipse.m2m.atl.engine.vm.ATLVMPlugin;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.IEditorDescriptor;
@@ -340,29 +334,10 @@ public class AtlDebugModelPresentation extends LabelProvider implements IDebugMo
 	 * @see org.eclipse.debug.ui.ISourcePresentation#getEditorInput(java.lang.Object)
 	 */
 	public IEditorInput getEditorInput(Object element) {
-		IStorageEditorInput i;
-		AtlStackFrame frame;
-//		String projectName;
-		String fileName;
-		
 		if(element instanceof AtlStackFrame ) {
-			frame = (AtlStackFrame) element;
+			AtlStackFrame frame = (AtlStackFrame) element;
 			if(((AtlDebugTarget)frame.getDebugTarget()).isDisassemblyMode()) return getDisassemblyEditorInput(frame);
-			ILaunchConfiguration configuration = frame.getDebugTarget().getLaunch().getLaunchConfiguration();
-			try {
-				// TODO Recuperer le nom du fichier sur la stackframe
-				fileName = configuration.getAttribute(AtlLauncherTools.ATLFILENAME, AtlLauncherTools.NULLPARAMETER);
-
-				IWorkspace wks = ResourcesPlugin.getWorkspace();
-				IWorkspaceRoot wksroot = wks.getRoot();
-
-				i = new FileEditorInput(wksroot.getFile(new Path(fileName)));
-				return i;
-			}
-			catch (CoreException e) {
-				logger.log(Level.SEVERE, e.getLocalizedMessage(), e);
-//				e.printStackTrace();
-			}
+			return new FileEditorInput(frame.getSourcefile());
 		}
 		else if(element instanceof AtlBreakpoint) {
 			IMarker marker = ((AtlBreakpoint)element).getMarker();

@@ -9,8 +9,14 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
@@ -19,12 +25,14 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.debug.core.DebugEvent;
 import org.eclipse.debug.core.DebugException;
 import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunch;
+import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.model.IBreakpoint;
 import org.eclipse.debug.core.model.IDebugElement;
 import org.eclipse.debug.core.model.IDebugTarget;
@@ -110,6 +118,8 @@ public class AtlDebugTarget extends AtlDebugElement implements IDebugTarget {
 //	private AtlStackFrame cf;
 
 	private AtlNbCharFile structFile;
+	
+	private Pattern moduleName = Pattern.compile("^.*/(.*)\\.a(tl|sm)$");
 	
 	public AtlDebugTarget(ILaunch launch) {
 		super(null);
@@ -210,9 +220,9 @@ public class AtlDebugTarget extends AtlDebugElement implements IDebugTarget {
 						int n = ((IntegerValue) stack.call("size", new ArrayList())).getValue(); //$NON-NLS-1$
 						AtlStackFrame frames[] = new AtlStackFrame[n];
 						for(int i = 1 ; i <= n ; i++) {
-							// TODO To get current file being debugged
+							ObjectReference stackFrame = (ObjectReference)stack.call("at", Arrays.asList(new Object[]{IntegerValue.valueOf(i)})); //$NON-NLS-1$
 							try {
-								String fileName = launch.getLaunchConfiguration().getAttribute(AtlLauncherTools.ATLFILENAME, AtlLauncherTools.NULLPARAMETER);
+								String fileName = getPathFrom(stackFrame);
 
 								IWorkspace wks = ResourcesPlugin.getWorkspace();
 								IWorkspaceRoot wksroot = wks.getRoot();
@@ -221,16 +231,16 @@ public class AtlDebugTarget extends AtlDebugElement implements IDebugTarget {
 								file.refreshLocal(IResource.DEPTH_ZERO, null);
 								
 								structFile = new AtlNbCharFile(file.getContents());
+
+								frames[n - i] = new AtlStackFrame(
+										threads[0],
+										stackFrame,
+										structFile,
+										file);
 							} catch (CoreException e1) {
 								logger.log(Level.SEVERE, e1.getLocalizedMessage(), e1);
 //								e1.printStackTrace();
 							}
-
-//							frames[n - i] = cf = new AtlStackFrame(
-							frames[n - i] = new AtlStackFrame(
-								threads[0],
-								(ObjectReference)stack.call("at", Arrays.asList(new Object[]{IntegerValue.valueOf(i)})), //$NON-NLS-1$
-								structFile);
 						}
 						threads[0].setStackFrames(frames);
 						setState(AtlDebugTarget.stateSuspended);
@@ -251,6 +261,56 @@ public class AtlDebugTarget extends AtlDebugElement implements IDebugTarget {
 		}.start();
 	}
 	
+	/**
+	 * @param stackFrame A StackFrame reference containing an ASMOperation
+	 * @return The path from the launch configuration that matches the name of the ASMOperation's container
+	 * @throws CoreException if the launch configuration could not be read
+	 * @author Dennis Wagelaar <dennis.wagelaar@vub.ac.be>
+	 */
+	private String getPathFrom(ObjectReference stackFrame) throws CoreException {
+		String path = null;
+		
+		ObjectReference operation = (ObjectReference) stackFrame.call("getOperation", Collections.EMPTY_LIST);
+		Assert.isNotNull(operation);
+		ObjectReference asm = (ObjectReference) operation.call("getASM", Collections.EMPTY_LIST);
+		Assert.isNotNull(asm);
+		String asmName = ((StringValue) asm.call("getName", Collections.EMPTY_LIST)).getValue();
+		Assert.isNotNull(asmName);
+		
+		ILaunchConfiguration configuration = launch.getLaunchConfiguration();
+		List superimpose = configuration.getAttribute(AtlLauncherTools.SUPERIMPOSE, new ArrayList());
+		for (Iterator i = superimpose.iterator(); i.hasNext();) {
+			path = (String) i.next();
+			if (asmName.equals(getAsmNameFrom(path))) {
+				return path.substring(0, path.length() - 3) + "atl";
+			}
+		}
+		Map libraries = configuration.getAttribute(AtlLauncherTools.LIBS, new HashMap());
+		for (Iterator i = libraries.keySet().iterator(); i.hasNext();) {
+			String lib = (String) i.next();
+			path = (String) libraries.get(lib);
+			if (asmName.equals(lib) || asmName.equals(getAsmNameFrom(path))) {
+				return path.substring(0, path.length() - 3) + "atl";
+			}
+		}
+		path = configuration.getAttribute(AtlLauncherTools.ATLFILENAME, AtlLauncherTools.NULLPARAMETER);
+		
+		return path;
+	}
+	
+	/**
+	 * @param path A filename path that contains the name of a .asm or .atl file
+	 * @return The basename of the .asm or .atl file, if found, null otherwise
+	 * @author Dennis Wagelaar <dennis.wagelaar@vub.ac.be>
+	 */
+	private String getAsmNameFrom(String path) {
+		String asmName = null;
+		Matcher m = moduleName.matcher(path);
+		if (m.find()) {
+			asmName = m.group(1);
+		}
+		return asmName;
+	}
 	
 	/**
 	 * @see org.eclipse.debug.core.IBreakpointListener#breakpointAdded(org.eclipse.debug.core.model.IBreakpoint)
