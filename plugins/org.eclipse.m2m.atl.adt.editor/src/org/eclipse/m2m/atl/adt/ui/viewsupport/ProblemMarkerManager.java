@@ -89,7 +89,7 @@ public class ProblemMarkerManager implements IResourceChangeListener {
 	
 	
 	public ProblemMarkerManager() {
-		fListeners = new ListenerList(ListenerList.IDENTITY);
+		fListeners = new ListenerList();
 	}
 
 	/*

@@ -33,7 +33,7 @@ public class ProblemsLabelDecorator implements ILabelDecorator, ILightweightLabe
 
 	protected static Logger logger = Logger.getLogger(ATLVMPlugin.LOGGER);
 
-	private ListenerList labelProviderListeners = new ListenerList(ListenerList.IDENTITY);
+	private ListenerList labelProviderListeners = new ListenerList();
 	
 	private IProblemChangedListener problemChangedListener;
 	
