@@ -345,9 +345,7 @@ public class AtlStackFrame extends AtlDebugElement implements IStackFrame {
 		 * @see org.eclipse.core.resources.IStorage#getContents()
 		 */
 		public InputStream getContents() throws CoreException {
-			byte[] buffer = new byte[contents.length()];
-			System.arraycopy(contents.toCharArray(), 0, buffer, 0, contents.length() - 1);
-			return new ByteArrayInputStream(buffer);
+			return new ByteArrayInputStream(contents.getBytes());
 		}
 
 		/* (non-Javadoc)
