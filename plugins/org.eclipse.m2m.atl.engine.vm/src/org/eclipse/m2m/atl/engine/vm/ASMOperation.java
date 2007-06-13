@@ -14,6 +14,7 @@ import org.eclipse.m2m.atl.engine.vm.nativelib.ASMModel;
 import org.eclipse.m2m.atl.engine.vm.nativelib.ASMModelElement;
 import org.eclipse.m2m.atl.engine.vm.nativelib.ASMNativeObject;
 import org.eclipse.m2m.atl.engine.vm.nativelib.ASMOclAny;
+import org.eclipse.m2m.atl.engine.vm.nativelib.ASMOclSimpleType;
 import org.eclipse.m2m.atl.engine.vm.nativelib.ASMOclType;
 import org.eclipse.m2m.atl.engine.vm.nativelib.ASMReal;
 import org.eclipse.m2m.atl.engine.vm.nativelib.ASMString;
@@ -28,7 +29,10 @@ import org.eclipse.m2m.atl.engine.vm.nativelib.ASMString;
  */
 public class ASMOperation extends Operation {
 
+	public static ASMOclType myType = new ASMOclSimpleType("ASMOperation", getOclAnyType());
+
 	public ASMOperation(ASM asm, String name) {
+		setType(myType);
 		this.name = name;
 		this.asm = asm;
 	}
