@@ -41,6 +41,19 @@ public class MDRModelLoader extends ModelLoader {
 		return ret;
 	}
 
+	public ASMModel newModel(String name, String uri, ASMModel metamodel) {
+		ASMModel ret = null;
+
+		try {
+			ret = ASMMDRModel.newASMMDRModel(name, uri, (ASMMDRModel)metamodel, this);
+		} catch(Exception e) {
+			logger.log(Level.SEVERE, e.getLocalizedMessage(), e);
+//			e.printStackTrace(System.out);
+		}
+
+		return ret;
+	}
+
 	private String xmiVersion = null;
 	private String encoding = null;
 	
