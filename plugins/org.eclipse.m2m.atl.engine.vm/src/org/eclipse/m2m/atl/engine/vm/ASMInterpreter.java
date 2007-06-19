@@ -390,9 +390,10 @@ public class ASMInterpreter {
 				env.addModel(ml.loadModel(mAndMm[1], env.getModel("MOF"), url));
 			}
 			if(isTarget) {
+				String url = getURL(params, mAndMm[0]);
 				logger.info("Creating model " + mAndMm[0] + " : " + mAndMm[1]);
 //				System.out.println("Creating model " + mAndMm[0] + " : " + mAndMm[1]);
-				env.addModel(ml.newModel(mAndMm[0], env.getModel(mAndMm[1])));
+				env.addModel(ml.newModel(mAndMm[0], url, env.getModel(mAndMm[1])));
 			} else {
 				String url = getURL(params, mAndMm[0]);
 				logger.info("Loading model " + mAndMm[0] + " : " + mAndMm[1] + " from \"" + url + "\".");

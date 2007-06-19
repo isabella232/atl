@@ -65,7 +65,7 @@ public abstract class ModelLoader {
 			String url = ss[ss.length - 1];
 			ret = realLoadModel(name, metamodel, url);
 		} else {
-			ret = newModel(name, metamodel);
+			ret = newModel(name, ss[ss.length - 1], metamodel);
 			inject(ret, ss[0], (ss.length == 3) ? ss[1] : null, ss[ss.length - 1], null);
 		}
 		
@@ -142,9 +142,21 @@ public abstract class ModelLoader {
  			return root;
 	}
 
-
-
+	/**
+	 * @param name
+	 * @param metamodel
+	 * @return A new ASMModel
+	 * @deprecated Use {@link #newModel(String, String, ASMModel)} instead  
+	 */
 	public abstract ASMModel newModel(String name, ASMModel metamodel);
+
+	/**
+	 * @param name
+	 * @param uri
+	 * @param metamodel
+	 * @return A new ASMModel
+	 */
+	public abstract ASMModel newModel(String name, String uri, ASMModel metamodel);
 
 	protected abstract void setParameter(String name, Object value);
 

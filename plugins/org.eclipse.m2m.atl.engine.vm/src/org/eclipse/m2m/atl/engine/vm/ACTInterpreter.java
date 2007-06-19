@@ -217,7 +217,7 @@ public class ACTInterpreter {
 //								System.out.println("ERROR: model " + l.metaModel + " not loaded yet.");
 //								System.exit(1);
 							}
-							m = ml.newModel(l.model, mm);
+							m = ml.newModel(l.model, (String)params.get(l.name), mm);
 						}
 						env.addModel(l.name, m);
 						models.put(l.model, m);
@@ -308,7 +308,7 @@ public class ACTInterpreter {
 //								System.out.println("ERROR: model " + l.metaModel + " not loaded yet.");
 //								System.exit(1);
 							}
-							m = ml.newModel(l.model, mm);
+							m = ml.newModel(l.model, (String)params.get(l.name), mm);
 						}
 						env.addModel(l.name, m);
 						models.put(l.model, m);
