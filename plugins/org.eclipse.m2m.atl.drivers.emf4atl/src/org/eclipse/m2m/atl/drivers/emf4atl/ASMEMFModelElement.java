@@ -5,10 +5,12 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.WeakHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -562,7 +564,11 @@ if(debug) logger.info("\t\t\t\tfound: " + elems);
 	}
 
 	protected Method findMethod(Class cls, String name, Class argumentTypes[]) {
-		Method ret = null;
+		String sig = getMethodSignature(name, argumentTypes);
+		Method ret = findCachedMethod(sig);
+		if (ret != null) {
+			return ret;
+		}
 
 		Method methods[] = cls.getDeclaredMethods(); 
 		for(int i = 0 ; i < (methods.length) && (ret == null) ; i++) {
@@ -592,8 +598,52 @@ if(debug) logger.info("\t\t\t\tfound: " + elems);
 		if((ret == null) && (cls.getSuperclass() != null)) {
 			ret = findMethod(cls.getSuperclass(), name, argumentTypes);
 		}
+		
+		cacheMethod(sig, ret);
 
 		return ret;
+	}
+	
+	private static WeakHashMap methodCache = new WeakHashMap();
+	
+	private Method findCachedMethod(String signature) {
+		Method ret = null;
+		Map sigMap = (Map) methodCache.get(getMetaobject());
+		if (sigMap != null) {
+			ret = (Method) sigMap.get(signature);
+		}
+		return ret;
+	}
+	
+	private void cacheMethod(String signature, Method method) {
+		ASMModelElement mo = getMetaobject();
+		synchronized (methodCache) {
+			Map sigMap = (Map) methodCache.get(mo);
+			if (sigMap == null) {
+				sigMap = new HashMap();
+				methodCache.put(mo, sigMap);
+			}
+			sigMap.put(signature, method);
+		}
+	}
+	
+	/**
+	 * @param name
+	 * @param argumentTypes
+	 * @return The method signature
+	 */
+	private String getMethodSignature(String name, Class argumentTypes[]) {
+		StringBuffer sig = new StringBuffer();
+		sig.append(name);
+		sig.append('(');
+		for (int i = 0; i < argumentTypes.length; i++) {
+			if (i > 0) {
+				sig.append(',');
+			}
+			sig.append(argumentTypes[i].getName());
+		}
+		sig.append(')');
+		return sig.toString();
 	}
 	
 	public ASMOclAny invoke(StackFrame frame, String opName, List arguments) {
@@ -614,6 +664,45 @@ if(debug) logger.info("\t\t\t\tfound: " + elems);
 			}
 			
 			Method method = findMethod(object.getClass(), opName, argumentTypes);
+			try {
+				if(method != null) {
+					ret = emf2ASM(frame, method.invoke(object, args));
+				} else {
+					frame.printStackTrace("ERROR: could not find operation " + opName + " on " + getType() + " having supertypes: " + getType().getSupertypes() + " (including Java operations)");									
+				}
+			} catch(IllegalAccessException e) {
+				frame.printStackTrace("ERROR: could not invoke operation " + opName + " on " + getType() + " having supertypes: " + getType().getSupertypes() + " (including Java operations)");				
+			} catch(InvocationTargetException e) {
+				Throwable cause = e.getCause();
+				Exception toReport = (cause instanceof Exception) ? (Exception)cause : e;
+				frame.printStackTrace("ERROR: exception during invocation of operation " + opName + " on " + getType() + " (java method: " + method + ")", toReport);				
+			}
+		}
+		
+		return ret;
+	}
+
+	public ASMOclAny invokeSuper(StackFrame frame, String opName, List arguments) {
+		ASMOclAny ret = null;
+
+		Operation oper = null;
+		for (Iterator i = getType().getSupertypes().iterator(); i.hasNext() && oper == null;) {
+			oper = findOperation(frame, opName, arguments, (ASMOclType)i.next());
+		}
+		if(oper != null) {
+			ret = invoke(frame, oper, arguments);
+		} else {
+			Object args[] = new Object[arguments.size()];
+			Class argumentTypes[] = new Class[arguments.size()];
+			int k = 0;
+			for(Iterator i = arguments.iterator() ; i.hasNext() ; ) {
+				// warning: ASMEnumLiterals will not be converted!
+				args[k] = asm2EMF(frame, (ASMOclAny)i.next(), null, null);
+				argumentTypes[k] = args[k].getClass();
+				k++;
+			}
+			
+			Method method = findMethod(object.getClass().getSuperclass(), opName, argumentTypes);
 			try {
 				if(method != null) {
 					ret = emf2ASM(frame, method.invoke(object, args));
