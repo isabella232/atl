@@ -143,6 +143,7 @@ public abstract class AtlModelHandler {
      * Creates a new ASMModel. Only use this method if the model URI is not known.
      * @param name The model name.
      * @param metamodel
+     * @deprecated Use {@link #newModel(String, String, ASMModel)} instead
      */
 	public abstract ASMModel newModel(String name, ASMModel metamodel);
 

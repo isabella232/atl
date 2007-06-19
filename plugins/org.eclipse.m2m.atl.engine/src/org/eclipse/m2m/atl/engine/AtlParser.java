@@ -46,8 +46,8 @@ public class AtlParser {
 //		ASMModel mofmm = amh.getMof();
 
 		try {
-			ret[0] = ASMEMFModel.newASMEMFModel("temp", (ASMEMFModel)atlmm, null);
-			ret[1] = amh.newModel("pb", pbmm);
+			ret[0] = ASMEMFModel.newASMEMFModel("temp", "temp", (ASMEMFModel)atlmm, null);
+			ret[1] = amh.newModel("pb", "pb", pbmm);
 			
 			EBNFInjector2 ebnfi = new EBNFInjector2();
 			ebnfi.performImportation(atlmm, ret[0], in, "ATL", ATLLexer.class, ATLParser.class, ret[1]);

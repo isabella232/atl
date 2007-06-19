@@ -187,6 +187,7 @@ public class AtlEMFModelHandler extends AtlModelHandler {
 
     /**
      * @see ASMEMFModel#newASMEMFModel(String, ASMEMFModel, ModelLoader)
+     * @deprecated
      */
 	public ASMModel newModel(String name, ASMModel metamodel) {
 		ASMModel ret = null;
