@@ -169,7 +169,7 @@ public class ASMOperation extends Operation {
 		return ret;
 	}
 
-	public void realExec(ASMStackFrame frame) throws Exception {
+	private void realExec(ASMStackFrame frame) throws Exception {
 		while(frame.hasNextInstruction()) {
 			ASMInstruction instr = frame.nextInstruction();
 			String mn = instr.getMnemonic();
@@ -239,7 +239,7 @@ public class ASMOperation extends Operation {
 				for(int j = 0 ; j < nb ; j++)
 					arguments.add(0, frame.pop());
 				ASMOclAny o = frame.pop();	// self
-				ASMOclAny ret = o.invoke(frame, opName, arguments, (ASMOclType)contextType.getSupertypes().iterator().next()); 
+				ASMOclAny ret = o.invokeSuper(frame, opName, arguments); 
 
 				if(ret != null) {
 					frame.push(ret);
@@ -328,12 +328,12 @@ public class ASMOperation extends Operation {
 				int nested = 0;
 				do {
 					String mnc = frame.nextInstruction().getMnemonic();
-					if(mnc.equals("enditerate")) {
+					if(mnc == "enditerate") {
 						if(nested == 0) {
 							break;
 						} 
 					    nested--;
-					} else if(mnc.equals("iterate")) {
+					} else if(mnc == "iterate") {
 						nested++;
 					}
 				} while(true);
