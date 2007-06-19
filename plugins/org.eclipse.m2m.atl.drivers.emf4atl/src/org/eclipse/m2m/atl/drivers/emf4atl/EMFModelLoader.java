@@ -56,12 +56,28 @@ public class EMFModelLoader extends ModelLoader {
 		
 		return ret;
 	}
-	
+
+	/**
+	 * @deprecated
+	 */
 	public ASMModel newModel(String name, ASMModel metamodel) {
 		ASMModel ret = null;
 		
 		try {
 			ret = ASMEMFModel.newASMEMFModel(name, (ASMEMFModel)metamodel, this);
+		} catch (Exception e) {
+			logger.log(Level.SEVERE, e.getLocalizedMessage(), e);
+//			e.printStackTrace();
+		}
+		
+		return ret;
+	}
+
+	public ASMModel newModel(String name, String uri, ASMModel metamodel) {
+		ASMModel ret = null;
+		
+		try {
+			ret = ASMEMFModel.newASMEMFModel(name, uri, (ASMEMFModel)metamodel, this);
 		} catch (Exception e) {
 			logger.log(Level.SEVERE, e.getLocalizedMessage(), e);
 //			e.printStackTrace();

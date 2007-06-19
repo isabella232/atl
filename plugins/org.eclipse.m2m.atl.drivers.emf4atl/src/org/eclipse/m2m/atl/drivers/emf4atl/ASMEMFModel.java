@@ -250,6 +250,7 @@ public class ASMEMFModel extends ASMModel {
      * @param ml
      * @return
      * @throws Exception
+     * @deprecated
      */
 	public static ASMEMFModel newASMEMFModel(String name, ASMEMFModel metamodel, ModelLoader ml) throws Exception {
         return newASMEMFModel(name, name, metamodel, ml);
