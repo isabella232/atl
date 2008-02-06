@@ -20,14 +20,19 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import org.eclipse.emf.ecore.EClass;
+import org.eclipse.m2m.atl.engine.emfvm.AtlSuperimposeModule.AtlSuperimposeModuleException;
 import org.eclipse.m2m.atl.engine.emfvm.lib.ASMModule;
 import org.eclipse.m2m.atl.engine.emfvm.lib.ExecEnv;
 import org.eclipse.m2m.atl.engine.emfvm.lib.Extension;
 import org.eclipse.m2m.atl.engine.emfvm.lib.ReferenceModel;
+import org.eclipse.m2m.atl.engine.emfvm.lib.VMException;
 
 public class ASM {
+
+	protected static Logger logger = Logger.getLogger(EmfvmPlugin.LOGGER);
 
 	private String name;
 	private List operations = new ArrayList();
@@ -53,10 +58,27 @@ public class ASM {
 		}
 	}
 
+	/**
+	 * @return All registered operations.
+	 * @see #addOperation(ASMOperation)
+	 * @author Dennis Wagelaar <dennis.wagelaar@vub.ac.be>
+	 */
+	public Iterator getOperations() {
+		return operations.iterator();
+	}
+	
+	/**
+	 * @return "main" operation, if any.
+	 * @author Dennis Wagelaar <dennis.wagelaar@vub.ac.be>
+	 */
+	public ASMOperation getMainOperation() {
+		return mainOperation;
+	}
+
 	// TODO:
 	//	- implements other options
 	//	- define options somewhere (currently, best definition is in regular VM)
-	public void run(Map models, Map libraries, Map options) {
+	public void run(Map models, Map libraries, List superimpose, Map options) {
 		boolean printExecutionTime = "true".equals(options.get("printExecutionTime"));
 
 		long startTime = System.currentTimeMillis();
@@ -100,8 +122,6 @@ public class ASM {
 				}
 			}
 		}
-		
-		registerOperations(execEnv, operations);
 
 		ASMModule asmModule = new ASMModule();
 		StackFrame frame = new StackFrame(execEnv, asmModule, mainOperation);
@@ -112,14 +132,29 @@ public class ASM {
 			if(library.mainOperation != null)
 				library.mainOperation.exec(new StackFrame(execEnv, asmModule, library.mainOperation));
 		}
-		
+
+		// register module operations after libraries to avoid overriding
+		// "main" in execEnv (avoid superimposition problems)
+		registerOperations(execEnv, operations);
+
+        for(Iterator i = superimpose.iterator() ; i.hasNext() ; ) {
+            ASM module = (ASM)i.next();
+            AtlSuperimposeModule ami = new AtlSuperimposeModule(execEnv, module);
+            try {
+                ami.adaptModuleOperations();
+            } catch (AtlSuperimposeModuleException e) {
+            	throw new VMException(frame, e);
+            }
+            registerOperations(execEnv, module.operations);
+        }
+
 		mainOperation.exec(frame);
 		long endTime = System.currentTimeMillis();
 		if(printExecutionTime)
-			System.out.println("Executed " + name + " in " + ((endTime - startTime) / 1000.) + "s.");
+			logger.info("Executed " + name + " in " + ((endTime - startTime) / 1000.) + "s.");
 		
 		if("true".equals(options.get("showSummary")))
-			System.out.println("Number of instructions executed: " + execEnv.nbExecutedBytecodes);
+			logger.info("Number of instructions executed: " + execEnv.nbExecutedBytecodes);
 	}
 	
 	public void registerOperations(ExecEnv execEnv, List operations) {
@@ -128,13 +163,13 @@ public class ASM {
 			String signature = op.getContext();
 			if(signature.matches("^(Q|G|C|E|O|N).*$")) {
 				// Sequence, Bag, Collection, Set, OrderedSet, Native type
-				System.out.println("Unsupported registration: " + signature);
+				logger.warning("Unsupported registration: " + signature);
 //				} else if(signature.startsWith("T")) {
-//					System.out.println("Unsupported registration: " + signature);
+//					logger.warning("Unsupported registration: " + signature);
 			} else {
 				try {
 					Object type = parseType(execEnv, new StringCharacterIterator(signature));
-					//System.out.println("registering " + op + " on " + type);
+					//logger.info("registering " + op + " on " + type);
 					execEnv.registerOperation(type, op, op.getName());
 					//op.setContextType(type);
 				} catch(SignatureParsingException spe) {
@@ -207,7 +242,7 @@ public class ASM {
 						throw new SignatureParsingException("ERROR: could not find model element " + name + " from " + mname);
 					ret = ec;
 				} else {
-					System.out.println("WARNING: could not find model " + mname + ".");
+					logger.warning("Could not find model " + mname + ".");
 				}
 				break;
 				

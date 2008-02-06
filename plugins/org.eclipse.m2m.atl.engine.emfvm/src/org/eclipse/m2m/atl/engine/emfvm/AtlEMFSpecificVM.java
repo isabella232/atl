@@ -6,7 +6,7 @@
  * http://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
- *    Frédéric Jouault - initial API and implementation
+ *    Frï¿½dï¿½ric Jouault - initial API and implementation
  *******************************************************************************/
 package org.eclipse.m2m.atl.engine.emfvm;
 
@@ -29,6 +29,7 @@ import org.eclipse.emf.common.util.URI;
 import org.eclipse.m2m.atl.adt.launching.AtlLauncherTools;
 import org.eclipse.m2m.atl.adt.launching.AtlVM;
 import org.eclipse.m2m.atl.drivers.emf4atl.ASMEMFModel;
+import org.eclipse.m2m.atl.engine.emfvm.lib.EMFUtils;
 import org.eclipse.m2m.atl.engine.emfvm.lib.Model;
 import org.eclipse.m2m.atl.engine.emfvm.lib.ReferenceModel;
 import org.eclipse.m2m.atl.engine.emfvm.lib.VMException;
@@ -90,8 +91,15 @@ public class AtlEMFSpecificVM extends AtlVM {
 				libs.put(libName, lib);
 			}
 			
+			List superimpose = new ArrayList();
+			for(Iterator i = superimps.iterator() ; i.hasNext() ; ) {
+				URL url = (URL)i.next();
+				ASM module = new ASMXMLReader().read(url.openStream());
+				superimpose.add(module);
+			}
+			
 			try {
-				asm.run(actualModels, libs, options);
+				asm.run(actualModels, libs, superimpose, options);
 			} catch(VMException vme) {
 				vme.printStackTrace(System.out);
 				throw vme;
@@ -125,6 +133,7 @@ public class AtlEMFSpecificVM extends AtlVM {
 		Map targetModels = configuration.getAttribute(AtlLauncherTools.OUTPUT, new HashMap());
 		Map modelPaths = configuration.getAttribute(AtlLauncherTools.PATH, new HashMap());
 		Map libs = configuration.getAttribute(AtlLauncherTools.LIBS, new HashMap());
+		List superimps = configuration.getAttribute(AtlLauncherTools.SUPERIMPOSE, new ArrayList());
 
 		try {
 			for(Iterator i = sourceModels.keySet().iterator() ; i.hasNext() ; ) {
@@ -136,7 +145,10 @@ public class AtlEMFSpecificVM extends AtlVM {
 					mm = loadReferenceModel(mmName, modelPaths);
 					models.put(mmName, mm);
 				}
-				Model m = new Model(mm, URI.createPlatformResourceURI((String)modelPaths.get(mName), true));			
+				Model m = new Model(
+						mm, 
+						URI.createPlatformResourceURI((String)modelPaths.get(mName), true),
+						false);			
 				models.put(mName, m);
 			}
 
@@ -149,9 +161,12 @@ public class AtlEMFSpecificVM extends AtlVM {
 					mm = loadReferenceModel(mmName, modelPaths);
 					models.put(mmName, mm);
 				}
-				Model m = new Model(mm);			
+				Model m = new Model(
+						mm, 
+						URI.createPlatformResourceURI((String)modelPaths.get(mName), true),
+						true);			
 				models.put(mName, m);
-				m.isTarget = true;
+//				m.isTarget = true;
 			}
 
 			try {
@@ -160,6 +175,7 @@ public class AtlEMFSpecificVM extends AtlVM {
 					boolean value = configuration.getAttribute(AtlLauncherTools.additionalParamIds[i], false);
 					options.put(AtlLauncherTools.additionalParamIds[i], value ? "true" : "false");
 				}
+				EMFUtils.setAllowInterModelReferences(!("true".equals(options.get("checkSameModel"))));
 				
 				Map libraries = new HashMap();
 				for(Iterator i = libs.keySet().iterator() ; i.hasNext() ; ) {
@@ -169,7 +185,15 @@ public class AtlEMFSpecificVM extends AtlVM {
 					libraries.put(libName, lib);
 				}
 
-				asm.run(models, libraries, options);
+				List superimpose = new ArrayList();
+				for(Iterator i = superimps.iterator() ; i.hasNext() ; ) {
+					String path = (String)i.next();
+					IFile file = ResourcesPlugin.getWorkspace().getRoot().getFile(Path.fromOSString(path));
+					ASM module = new ASMXMLReader().read(file.getContents());
+					superimpose.add(module);
+				}
+
+				asm.run(models, libraries, superimpose, options);
 
 				for(Iterator i = targetModels.keySet().iterator() ; i.hasNext() ; ) {
 					String mName = (String)i.next();

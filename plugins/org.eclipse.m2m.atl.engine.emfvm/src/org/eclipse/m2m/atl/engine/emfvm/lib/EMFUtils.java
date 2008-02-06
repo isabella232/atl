@@ -6,24 +6,29 @@
  * http://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
- *    Frédéric Jouault - initial API and implementation
+ *    Frï¿½dï¿½ric Jouault - initial API and implementation
  *******************************************************************************/
 package org.eclipse.m2m.atl.engine.emfvm.lib;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EClassifier;
 import org.eclipse.emf.ecore.EEnum;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EStructuralFeature;
+import org.eclipse.m2m.atl.engine.emfvm.EmfvmPlugin;
 
 public class EMFUtils {
 	
 	// TODO: map this to allowInterModelReferences option
-	private static final boolean allowInterModelReferences = false;
+	private static boolean allowInterModelReferences = false;
 
+	protected static Logger logger = Logger.getLogger(EmfvmPlugin.LOGGER);
+	
 	public static Object get(StackFrame frame, EObject eo, String name) {
 		Object ret = null;
 		
@@ -99,7 +104,8 @@ public class EMFUtils {
 				}
 			} else {
 				if(value instanceof Collection) {
-					frame.execEnv.out.println("Warning: assigning a Collection to a single-valued feature");
+//					frame.execEnv.out.println("Warning: assigning a Collection to a single-valued feature");
+					logger.warning("Assigning a Collection to a single-valued feature");
 					Collection c = (Collection)value;
 					if(!c.isEmpty()) {
 						value = c.iterator().next();
@@ -109,17 +115,29 @@ public class EMFUtils {
 				}
 				if(targetIsEnum) {
 					EEnum eenum = (EEnum)type;
-					eo.eSet(feature, eenum.getEEnumLiteral(value.toString()));							
+					eo.eSet(feature, eenum.getEEnumLiteral(value.toString()).getInstance());							
 				} else if(allowInterModelReferences || !(value instanceof EObject)) {
 					eo.eSet(feature, value);
-				} else {	// (!allowIntermodelReferences) && (value intanceof EObject)
+				} else {	// (!allowIntermodelReferences) && (value instanceof EObject)
 					if(frame.execEnv.getModelOf(eo) == frame.execEnv.getModelOf((EObject)value))
 						eo.eSet(feature, value);
+					else
+						logger.warning("Refusing to set inter-model reference to " + feature);
 				}
 			}
 		} catch(Exception e) {
 			// TODO: implement a better mechanism than println for warnings
-			frame.execEnv.out.println("Warning: could not assign " + value + " to " + frame.execEnv.toPrettyPrintedString(eo) + "." + name);
+//			frame.execEnv.out.println("Warning: could not assign " + value + " to " + frame.execEnv.toPrettyPrintedString(eo) + "." + name);
+			logger.log(
+					Level.WARNING, 
+					"Could not assign " + value + " to " + 
+					frame.execEnv.toPrettyPrintedString(eo) + "." + name, 
+					e);
 		}
+	}
+
+	public static void setAllowInterModelReferences(
+			boolean allowInterModelReferences) {
+		EMFUtils.allowInterModelReferences = allowInterModelReferences;
 	}
 }

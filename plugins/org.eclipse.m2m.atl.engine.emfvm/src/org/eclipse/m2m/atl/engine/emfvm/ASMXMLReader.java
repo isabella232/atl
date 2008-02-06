@@ -15,16 +15,20 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+import org.eclipse.m2m.atl.engine.vm.ASMXMLReaderException;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 import org.xml.sax.helpers.DefaultHandler;
 
 public class ASMXMLReader extends DefaultHandler {
+
+	protected static Logger logger = Logger.getLogger(EmfvmPlugin.LOGGER);
 
 	private Object asmNameIndex;
 	private ArrayList cp = new ArrayList();
@@ -117,13 +121,15 @@ public class ASMXMLReader extends DefaultHandler {
 	}
 
 	public void error(SAXParseException e) {
-		System.out.println("Error: line " + e.getLineNumber() + ":" + e.getColumnNumber() + ": " + e.getMessage());
+		logger.severe("Error: line " + e.getLineNumber() + ":" + e.getColumnNumber() + ": " + e.getMessage());
 	       	errors++;
 	}
 
-	public void fatalError(SAXParseException e) {
-		System.out.println("Fatal error: line " + e.getLineNumber() + ":" + e.getColumnNumber() + ": " + e.getMessage());
-		System.exit(1);
+	public void fatalError(SAXParseException e) throws SAXParseException {
+		throw new ASMXMLReaderException(
+				"Fatal error reading .asm file: line " + e.getLineNumber() + ":" + e.getColumnNumber() + ": " + e.getLocalizedMessage(),
+				e.getPublicId(), e.getSystemId(), e.getLineNumber(), e.getColumnNumber(), e);
+//		System.exit(1); // NEVER call System.exit() from a framework, such as Eclipse!!!
 	}
 
 	private int errors;

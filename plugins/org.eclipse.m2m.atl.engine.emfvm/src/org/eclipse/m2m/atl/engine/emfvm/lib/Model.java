@@ -6,7 +6,7 @@
  * http://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
- *    Frédéric Jouault - initial API and implementation
+ *    Frï¿½dï¿½ric Jouault - initial API and implementation
  *******************************************************************************/
 package org.eclipse.m2m.atl.engine.emfvm.lib;
 
@@ -18,6 +18,7 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EClass;
@@ -29,8 +30,11 @@ import org.eclipse.emf.ecore.xmi.XMIResource;
 import org.eclipse.emf.ecore.xmi.XMLResource;
 import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
 import org.eclipse.emf.ecore.xmi.impl.XMLParserPoolImpl;
+import org.eclipse.m2m.atl.engine.emfvm.EmfvmPlugin;
 
 public class Model {
+
+	protected static Logger logger = Logger.getLogger(EmfvmPlugin.LOGGER);
 	
 	protected static ResourceSet resourceSet;
 	static {
@@ -39,10 +43,10 @@ public class Model {
 			etfm.put("*", new XMIResourceFactoryImpl());
 		}
 		resourceSet = new ResourceSetImpl();
+		// see http://www.eclipse.org/modeling/emf/docs/performance/EMFPerformanceTips.html
 		Map loadOptions = resourceSet.getLoadOptions();
 		loadOptions.put(XMLResource.OPTION_DEFER_IDREF_RESOLUTION, Boolean.TRUE);
 		loadOptions.put(XMLResource.OPTION_USE_PARSER_POOL, new XMLParserPoolImpl());
-
 	}
 	
 	protected ReferenceModel referenceModel;
@@ -59,15 +63,20 @@ public class Model {
 	public boolean isTarget = false;
 	private Map elementsByType = new HashMap();
 	
-	public Model(ReferenceModel referenceModel, URL url) throws IOException {
-		this(referenceModel, URI.createURI(url.toString()));
+	public Model(ReferenceModel referenceModel, URL url, boolean isTarget) throws IOException {
+		this(referenceModel, URI.createURI(url.toString()), isTarget);
 	}
 	
-	public Model(ReferenceModel referenceModel, URI uri) throws IOException {
+	public Model(ReferenceModel referenceModel, URI uri, boolean isTarget) throws IOException {
 		this.referenceModel = referenceModel;
 		//resource = resourceSet.createResource(uri);
 		//resource.load(Collections.EMPTY_MAP);
-		resource = resourceSet.getResource(uri, true);
+		this.isTarget = isTarget;
+		if (isTarget) {
+			resource = resourceSet.createResource(uri);
+		} else {
+			resource = resourceSet.getResource(uri, true);
+		}
 		canDisposeOfEMFResource = true;
 	}
 	

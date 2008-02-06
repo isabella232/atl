@@ -6,7 +6,7 @@
  * http://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
- *    Frédéric Jouault - initial API and implementation
+ *    Frï¿½dï¿½ric Jouault - initial API and implementation
  *    Obeo - bag implementation
  *    Mikael Barbero
  *******************************************************************************/
@@ -25,6 +25,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.ecore.EClass;
@@ -32,15 +33,18 @@ import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EcorePackage;
 import org.eclipse.emf.ecore.impl.EClassImpl;
 import org.eclipse.emf.ecore.impl.EObjectImpl;
+import org.eclipse.m2m.atl.engine.emfvm.EmfvmPlugin;
 
 /**
  * Execution environment.
  *
- * @author Frédéric Jouault <a href="mailto:frederic.jouault@univ-nantes.fr">frederic.jouault@univ-nantes.fr</a>
+ * @author Frï¿½dï¿½ric Jouault <a href="mailto:frederic.jouault@univ-nantes.fr">frederic.jouault@univ-nantes.fr</a>
  * @author William Piers <a href="mailto:william.piers@obeo.fr">william.piers@obeo.fr</a>
  * @author Mikael Barbero <a href="mailto:mikael.barbero@univ-nantes.fr">mikael.barbero@univ-nantes.fr</a>
  */
 public class ExecEnv {
+
+	protected static Logger logger = Logger.getLogger(EmfvmPlugin.LOGGER);
 
 	private Map operationsByType = new HashMap();
 
@@ -54,8 +58,6 @@ public class ExecEnv {
 	private Map modelsByResource;
 
 	public boolean step = false;
-	// TODO: replace with a logger
-	public PrintStream out = System.out;
 
 	public long nbExecutedBytecodes = 0;
 
@@ -109,10 +111,10 @@ public class ExecEnv {
 			ret = (Operation)map.get(name);
 
 		if(debug)
-			System.out.println(this + "@" + this.hashCode() + ".getOperation(" + type + ", " + name + ")");
+			logger.info(this + "@" + this.hashCode() + ".getOperation(" + type + ", " + name + ")");
 		if(ret == null) {
 			if(debug)
-				System.out.println("looking in super of this for operation " + name);
+				logger.info("looking in super of this for operation " + name);
 			for(Iterator i = getSupertypes(type).iterator() ; i.hasNext() && (ret == null) ; ) {
 				Object st = i.next();
 				ret = getOperation(st, name);
@@ -120,6 +122,11 @@ public class ExecEnv {
 			// let us remember this operation (remark: we could also precompute this for all types)
 			if(map != null)
 				map.put(name, ret);
+		}
+		//TODO look for EMF native operations
+		if(ret == null) {
+			if(debug)
+				logger.info("looking in native operations of this for operation " + name);
 		}
 
 		return ret;
@@ -292,7 +299,8 @@ public class ExecEnv {
 	}
 
 	public void prettyPrint(Object value) {
-		prettyPrint(out, value);
+//		prettyPrint(out, value);
+		logger.info(toPrettyPrintedString(value));
 	}
 
 	public void prettyPrint(PrintStream out, Object value) {
@@ -306,7 +314,7 @@ public class ExecEnv {
 			out.print('#');
 			out.print(value);	// TODO: escape
 		} else if(value instanceof EClass){
-			EClass c = (EClass)value;
+			final EClass c = (EClass)value;
 			out.print(getModelNameOf(c));
 			out.print('!');
 			String name = c.getName();
@@ -314,8 +322,15 @@ public class ExecEnv {
 				name = "<unnamed>";
 			out.print(name);
 		} else if(value instanceof EObject) {
-			EObject eo = (EObject)value;
-			prettyPrint(out, eo.eClass());
+			final EObject eo = (EObject)value;
+			final ReferenceModel mModel = getModelOf(eo).getReferenceModel();
+//			prettyPrint(out, eo.eClass());
+			String name = eo.eClass().getName();
+			out.print((String) nameByModel.get(mModel));
+			out.print('!');
+			if(name == null)
+				name = "<unnamed>";
+			out.print(name);
 			out.print('@');
 			out.print(getModelNameOf(eo));
 		} else if(value instanceof LinkedHashSet) {
@@ -391,12 +406,13 @@ public class ExecEnv {
 
 	public Object newElement(StackFrame frame, EClass ec) {
 		Object s = null;
-		ReferenceModel referenceModel = (ReferenceModel)getModelOf(ec);
+//		ReferenceModel referenceModel = (ReferenceModel)getModelOf(ec);
 		for(Iterator i = getModels() ; i.hasNext() ; ) {
 			Model model = (Model)i.next();
 			if(!model.isTarget)
 				continue;
-			if(model.getReferenceModel().equals(referenceModel)) {
+//			if(model.getReferenceModel().equals(referenceModel)) {
+			if(model.getReferenceModel().isModelOf(ec)) {
 				s = model.newElement(ec);
 				break;
 			}
@@ -1414,10 +1430,11 @@ public class ExecEnv {
 			public Object exec(StackFrame frame) {
 				Object localVars[] = frame.localVars;
 //				out.println("Executed " + nbExecutedBytecodes + " bytecodes so far.");
-				out.print(localVars[1]);
-				out.print(": ");
-				prettyPrint(localVars[0]);
-				out.println();
+				logger.info(localVars[1] + ": " + localVars[0]);
+//				out.print(localVars[1]);
+//				out.print(": ");
+//				prettyPrint(localVars[0]);
+//				out.println();
 				return localVars[0];
 			}
 		});
