@@ -264,8 +264,6 @@ public class ASMOperation extends Operation {
 					Operation operation = frame.execEnv.getOperation(type, bytecode.operand);
 					
 					if (operation != null) {
-//						if(operation == null)
-//							throw new VMException(frame, "operation not found: " + frame.execEnv.toPrettyPrintedString(self) + "." + bytecode.operand);
 						StackFrame calleeFrame = (StackFrame)frame.newFrame(operation);
 						Object arguments[] = calleeFrame.localVars;
 
@@ -330,8 +328,10 @@ public class ASMOperation extends Operation {
 						if(value instanceof OclUndefined)	// other values are *not* wrapped
 							value = null;
 						EMFUtils.set(frame, (EObject)s, (String)bytecode.operand, value);
-					} else {
+					} else if(s instanceof HasFields) {
 						((HasFields)s).set(frame, bytecode.operand, value);
+					} else {
+						throw new VMException(frame, s + " has no property \"" + (String)bytecode.operand + "\"");
 					}
 					break;
 				case Bytecode.GET:
@@ -343,8 +343,10 @@ public class ASMOperation extends Operation {
 						stack[fp++] = frame.execEnv.getHelperValue(frame, type, s, propName);
 					} else if(s instanceof EObject) {
 						stack[fp++] = EMFUtils.get(frame, (EObject)s, propName);
-					} else {
+					} else if(s instanceof HasFields) {
 						stack[fp++] = ((HasFields)s).get(frame, propName);
+					} else {
+						throw new VMException(frame, s + " has no property \"" + propName + "\"");
 					}
 					break;
 				case Bytecode.DUP:
