@@ -6,7 +6,7 @@
  * http://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
- *    Frédéric Jouault - initial API and implementation
+ *    Frï¿½dï¿½ric Jouault - initial API and implementation
  *******************************************************************************/
 package org.eclipse.m2m.atl.engine.emfvm;
 
@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.eclipse.emf.ecore.EClass;
@@ -173,7 +174,8 @@ public class ASM {
 					execEnv.registerOperation(type, op, op.getName());
 					//op.setContextType(type);
 				} catch(SignatureParsingException spe) {
-					spe.printStackTrace(System.out);
+					logger.log(Level.SEVERE, spe.getLocalizedMessage(), spe);
+//					spe.printStackTrace(System.out);
 				}
 			}
 		}
