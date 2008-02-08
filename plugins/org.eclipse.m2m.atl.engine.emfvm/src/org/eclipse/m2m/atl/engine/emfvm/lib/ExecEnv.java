@@ -34,7 +34,9 @@ import java.util.logging.Logger;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.emf.common.util.EList;
+import org.eclipse.emf.common.util.Enumerator;
 import org.eclipse.emf.ecore.EClass;
+import org.eclipse.emf.ecore.EEnumLiteral;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EcorePackage;
 import org.eclipse.emf.ecore.impl.EClassImpl;
@@ -1423,6 +1425,9 @@ public class ExecEnv {
 		operationsByName.put("=", new Operation(2) {
 			public Object exec(StackFrame frame) {
 				Object localVars[] = frame.localVars;
+				if (localVars[0] instanceof Enumerator) {
+					return new Boolean(localVars[1].equals(localVars[0]));
+				}
 				return new Boolean(localVars[0].equals(localVars[1]));					
 			}
 		});
