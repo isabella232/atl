@@ -12,7 +12,11 @@
  *******************************************************************************/
 package org.eclipse.m2m.atl.engine.emfvm.lib;
 
+import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,6 +31,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
@@ -123,11 +129,6 @@ public class ExecEnv {
 			if(map != null)
 				map.put(name, ret);
 		}
-		//TODO look for EMF native operations
-		if(ret == null) {
-			if(debug)
-				logger.info("looking in native operations of this for operation " + name);
-		}
 
 		return ret;
 	}
@@ -180,6 +181,14 @@ public class ExecEnv {
 				ret = ((EClass)type).getESuperTypes();
 				if(ret.size() == 0)	// extends OclAny
 					ret = Arrays.asList(new Class[] {Object.class});
+				else {
+					// invert list to comply with regular ATL VM behaviour
+					final List sts = ret;
+					ret = new ArrayList(sts.size());
+					for (int i = sts.size() - 1; i >= 0; i--) {
+						ret.add(sts.get(i));
+					}
+				}
 			} else {
 				ret = (List)supertypes.get(type);
 				if(ret == null) {
@@ -778,7 +787,7 @@ public class ExecEnv {
 			public Object exec(StackFrame frame) {
 				Object localVars[] = frame.localVars;
 
-				return new Integer(((List)localVars[0]).indexOf(localVars[1]));
+				return new Integer(((List)localVars[0]).indexOf(localVars[1]) + 1);
 			}
 		});
 		operationsByName.put("prepend", new Operation(2) {
@@ -1358,6 +1367,18 @@ public class ExecEnv {
 				return new Boolean(((String)localVars[0]).equals(localVars[1]));					
 			}
 		});
+		operationsByName.put("writeTo", new Operation(2) {
+			public Object exec(StackFrame frame) {
+				Object localVars[] = frame.localVars;
+				return new Boolean(writeToWithCharset(frame, (String)localVars[0], (String)localVars[1], null));					
+			}
+		});
+		operationsByName.put("writeToWithCharset", new Operation(3) {
+			public Object exec(StackFrame frame) {
+				Object localVars[] = frame.localVars;
+				return new Boolean(writeToWithCharset(frame, (String)localVars[0], (String)localVars[1], (String)localVars[2]));					
+			}
+		});
 
 		// Tuple
 		operationsByName = new HashMap();
@@ -1540,10 +1561,10 @@ public class ExecEnv {
 				// could be a Set (actually was) instead of an OrderedSet
 				Set ret = new LinkedHashSet();
 				EClass ec = (EClass)localVars[0];
-				Model rm = getModelOf(ec);
+//				Model rm = getModelOf(ec);
 				for(Iterator i = frame.execEnv.modelsByName.values().iterator() ; i.hasNext() ; ) {
 					Model model = (Model)i.next();
-					if((!model.isTarget) && (model.getReferenceModel() == rm))
+					if((!model.isTarget) && (model.getReferenceModel().isModelOf(ec)))
 						ret.addAll(model.getElementsByType(ec));
 				}
 				return ret;
@@ -1753,4 +1774,65 @@ public class ExecEnv {
 			return null;
 		}
 	};
+	
+	/**
+	 * Writes self to fileName with given character set.
+	 * @param frame VM stack frame
+	 * @param self the string to write
+	 * @param fileName the file to write to
+	 * @param charset the character set to use, or use default when null
+	 * @return true on success
+	 * @throws VMException if an {@link IOException} occurs
+	 */
+	private static boolean writeToWithCharset(StackFrame frame, String self,
+			String fileName, String charset) throws VMException {
+		boolean ret = false;
+		try {
+			File file = getFile(fileName);
+			if (file.getParentFile() != null)
+				file.getParentFile().mkdirs();
+			PrintStream out = null;
+			if (charset == null) {
+				out = new PrintStream(new BufferedOutputStream(
+						new FileOutputStream(file)), true);
+			} else {
+				out = new PrintStream(new BufferedOutputStream(
+						new FileOutputStream(file)), true, charset);
+			}
+			out.print(self);
+			out.close();
+			ret = true;
+		} catch (IOException ioe) {
+			throw new VMException(frame, ioe);
+		}
+		return ret;
+	}
+
+	/**
+     * @param path The absolute or relative path to a file. 
+     * @return The file in the workspace, or the file in the filesystem if
+     * the workspace is not available.
+     * @author Dennis Wagelaar <dennis.wagelaar@vub.ac.be>
+     */
+    private static File getFile(String path) {
+		try {
+			Class[] emptyClassArray = new Class[] {};
+			Object[] emptyObjectArray = new Object[] {};
+			Class rp = Class
+					.forName("org.eclipse.core.resources.ResourcesPlugin");
+			Object ws = rp.getMethod("getWorkspace", emptyClassArray).invoke(
+					null, emptyObjectArray);
+			Object root = ws.getClass().getMethod("getRoot", emptyClassArray)
+					.invoke(ws, emptyObjectArray);
+			Path wspath = new Path(path);
+			Object wsfile = root.getClass().getMethod("getFile",
+					new Class[] { IPath.class }).invoke(root,
+					new Object[] { wspath });
+			path = wsfile.getClass().getMethod("getLocation", emptyClassArray)
+					.invoke(wsfile, emptyObjectArray).toString();
+		} catch (Throwable e) {
+			//fall back to native java.io.File path resolution
+		}
+		return new File(path);
+	}
 }
