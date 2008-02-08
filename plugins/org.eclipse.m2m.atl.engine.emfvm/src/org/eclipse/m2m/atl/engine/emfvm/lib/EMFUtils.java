@@ -55,6 +55,7 @@ public class EMFUtils {
 	//		- may be too permissive (any value for which toString returns a valid literal name works) 
 	//	- should flatten nested collections
 	public static void set(StackFrame frame, EObject eo, String name, Object value) {
+		final boolean debug = false;
 		EStructuralFeature feature = eo.eClass().getEStructuralFeature(name);
 		
 		// makes it possible to use an integer to set a floating point property  
@@ -86,6 +87,8 @@ public class EMFUtils {
 							if(v instanceof EObject) {
 								if(frame.execEnv.getModelOf(eo) == frame.execEnv.getModelOf((EObject)v))
 									oldCol.add(v);
+								else if (debug)
+									logger.warning("Refusing to set inter-model reference to " + feature);
 							} else {
 								oldCol.add(v);								
 							}
@@ -100,11 +103,12 @@ public class EMFUtils {
 					} else {	// (!allowIntermodelReferences) && (value intanceof EObject)
 						if(frame.execEnv.getModelOf(eo) == frame.execEnv.getModelOf((EObject)value))
 							oldCol.add(value);
+						else if (debug)
+							logger.warning("Refusing to set inter-model reference to " + feature);
 					}
 				}
 			} else {
 				if(value instanceof Collection) {
-//					frame.execEnv.out.println("Warning: assigning a Collection to a single-valued feature");
 					logger.warning("Assigning a Collection to a single-valued feature");
 					Collection c = (Collection)value;
 					if(!c.isEmpty()) {
@@ -121,13 +125,11 @@ public class EMFUtils {
 				} else {	// (!allowIntermodelReferences) && (value instanceof EObject)
 					if(frame.execEnv.getModelOf(eo) == frame.execEnv.getModelOf((EObject)value))
 						eo.eSet(feature, value);
-					else
+					else if (debug)
 						logger.warning("Refusing to set inter-model reference to " + feature);
 				}
 			}
 		} catch(Exception e) {
-			// TODO: implement a better mechanism than println for warnings
-//			frame.execEnv.out.println("Warning: could not assign " + value + " to " + frame.execEnv.toPrettyPrintedString(eo) + "." + name);
 			logger.log(
 					Level.WARNING, 
 					"Could not assign " + value + " to " + 
