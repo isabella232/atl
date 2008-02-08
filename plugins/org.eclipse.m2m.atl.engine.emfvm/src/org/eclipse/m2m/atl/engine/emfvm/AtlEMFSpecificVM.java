@@ -43,6 +43,7 @@ public class AtlEMFSpecificVM extends AtlVM {
 
 	// launch from Regular VM arguments (used for ant tasks)
 	public void launch(URL asmUrl, Map libs, Map models, Map params, List superimps, Map options) {
+		EMFUtils.setAllowInterModelReferences(!("true".equals(options.get("checkSameModel"))));
 		Map actualModels = new HashMap();
 		// handle metamodels first
 		List targetModels = new ArrayList();
