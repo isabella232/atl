@@ -24,7 +24,6 @@ import org.eclipse.m2m.atl.engine.emfvm.EmfvmPlugin;
 
 public class EMFUtils {
 	
-	// TODO: map this to allowInterModelReferences option
 	private static boolean allowInterModelReferences = false;
 
 	protected static Logger logger = Logger.getLogger(EmfvmPlugin.LOGGER);
@@ -32,15 +31,15 @@ public class EMFUtils {
 	public static Object get(StackFrame frame, EObject eo, String name) {
 		Object ret = null;
 		
-		EClass ec = eo.eClass();
+		final EClass ec = eo.eClass();
 		try {
 			if("__xmiID__".equals(name)) {
 				ret = frame.execEnv.getModelOf(eo).resource.getURIFragment(eo);
 			} else {
-				EStructuralFeature sf = ec.getEStructuralFeature(name);
-				Object val = eo.eGet(sf);
-				if(val == null) val = OclUndefined.SINGLETON;
-				ret = val;
+				final EStructuralFeature sf = ec.getEStructuralFeature(name);
+				ret = eo.eGet(sf);
+				if(ret == null) ret = OclUndefined.SINGLETON;
+//				ret = val;
 			}
 		} catch(Exception e) {
 			throw new VMException(frame, "error accessing " + ec + "." + name);
@@ -56,7 +55,7 @@ public class EMFUtils {
 	//	- should flatten nested collections
 	public static void set(StackFrame frame, EObject eo, String name, Object value) {
 		final boolean debug = false;
-		EStructuralFeature feature = eo.eClass().getEStructuralFeature(name);
+		final EStructuralFeature feature = eo.eClass().getEStructuralFeature(name);
 		
 		// makes it possible to use an integer to set a floating point property  
 		if(value instanceof Integer) {
@@ -66,8 +65,8 @@ public class EMFUtils {
 			}
 		}
 		
-		EClassifier type = feature.getEType();
-		boolean targetIsEnum = type instanceof EEnum;
+		final EClassifier type = feature.getEType();
+		final boolean targetIsEnum = type instanceof EEnum;
 		try {
 			Object oldValue = eo.eGet(feature);
 			if(oldValue instanceof Collection) {
