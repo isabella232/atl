@@ -36,7 +36,6 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.common.util.Enumerator;
 import org.eclipse.emf.ecore.EClass;
-import org.eclipse.emf.ecore.EEnumLiteral;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EcorePackage;
 import org.eclipse.emf.ecore.impl.EClassImpl;
@@ -747,6 +746,12 @@ public class ExecEnv {
 			public Object exec(StackFrame frame) {
 				Object localVars[] = frame.localVars;
 				return new Boolean(((Boolean)localVars[0]).booleanValue() ^ ((Boolean)localVars[1]).booleanValue());					
+			}
+		});
+		operationsByName.put("implies", new Operation(2) {
+			public Object exec(StackFrame frame) {
+				Object localVars[] = frame.localVars;
+				return new Boolean(((Boolean)localVars[0]).booleanValue() ? ((Boolean)localVars[1]).booleanValue() : true);					
 			}
 		});
 
@@ -1535,6 +1540,12 @@ public class ExecEnv {
 				return null;
 			}
 		});
+		operationsByName.put("conformsTo", new Operation(2) {
+			public Object exec(StackFrame frame) {
+				Object localVars[] = frame.localVars;
+				return new Boolean(((OclType)localVars[0]).conformsTo((OclType)localVars[1]));
+			}
+		});
 
 		// OclParametrizedType
 		operationsByName = new HashMap();
@@ -1601,6 +1612,12 @@ public class ExecEnv {
 				return ret;
 			}
 		});
+		operationsByName.put("conformsTo", new Operation(2) {
+			public Object exec(StackFrame frame) {
+				Object localVars[] = frame.localVars;
+				return new Boolean(((EClass)localVars[1]).isSuperTypeOf(((EClass)localVars[0])));
+			}
+		});
 
 		// Class
 		operationsByName = new HashMap();
@@ -1612,6 +1629,12 @@ public class ExecEnv {
 				String initOperationName = (String)localVars[2];
 				frame.execEnv.registerAttributeHelper(localVars[0], name, initOperationName);
 				return null;
+			}
+		});
+		operationsByName.put("conformsTo", new Operation(2) {
+			public Object exec(StackFrame frame) {
+				Object localVars[] = frame.localVars;
+				return new Boolean(((Class)localVars[1]).isAssignableFrom(((Class)localVars[0])));
 			}
 		});
 
