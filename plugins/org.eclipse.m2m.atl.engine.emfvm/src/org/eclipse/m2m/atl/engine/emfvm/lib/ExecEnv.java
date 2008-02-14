@@ -325,7 +325,12 @@ public class ExecEnv {
 			out.print(value);	// TODO: escape
 		} else if(value instanceof EClass){
 			final EClass c = (EClass)value;
-			out.print(getModelNameOf(c));
+			final String mName = getModelNameOf(c);
+			if(mName != null){
+				out.print(getModelNameOf(c));
+			} else {
+				out.print("<unknown>");
+			}
 			out.print('!');
 			String name = c.getName();
 			if(name == null)
@@ -333,17 +338,26 @@ public class ExecEnv {
 			out.print(name);
 		} else if(value instanceof EObject) {
 			final EObject eo = (EObject)value;
-			out.print(getModelNameOf(eo));
+			final Model model = getModelOf(eo);
+			if(model != null) {
+				out.print((String) nameByModel.get(model));
+			} else {
+				out.print("<unknown>");
+			}
 			out.print('!');
 			out.print(EMFUtils.getName(eo));
 			out.print(':');
-			final ReferenceModel mModel = getModelOf(eo).getReferenceModel();
-			String name = eo.eClass().getName();
-			out.print((String) nameByModel.get(mModel));
-			out.print('!');
-			if(name == null)
-				name = "<unnamed>";
-			out.print(name);
+			if(model != null) {
+				final ReferenceModel mModel = model.getReferenceModel();
+				out.print((String) nameByModel.get(mModel));
+				out.print('!');
+				String name = eo.eClass().getName();
+				if(name == null)
+					name = "<unnamed>";
+				out.print(name);
+			} else {
+				prettyPrint(out, eo.eClass());
+			}
 		} else if(value instanceof LinkedHashSet) {
 			out.print("OrderedSet {");
 			prettyPrintCollection(out, (Collection)value);
