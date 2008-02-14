@@ -141,4 +141,17 @@ public class EMFUtils {
 			boolean allowInterModelReferences) {
 		EMFUtils.allowInterModelReferences = allowInterModelReferences;
 	}
+	
+	public static Object getName(EObject eo) {
+		Object ret = null;
+		
+		final EClass ec = eo.eClass();
+		final EStructuralFeature sf = ec.getEStructuralFeature("name");
+		if (sf != null) {
+			ret = eo.eGet(sf);
+		}
+		if(ret == null) ret = "<unnamed>";
+
+		return ret;
+	}
 }

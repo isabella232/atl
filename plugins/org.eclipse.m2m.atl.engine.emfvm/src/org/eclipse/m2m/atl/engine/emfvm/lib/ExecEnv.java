@@ -333,16 +333,17 @@ public class ExecEnv {
 			out.print(name);
 		} else if(value instanceof EObject) {
 			final EObject eo = (EObject)value;
+			out.print(getModelNameOf(eo));
+			out.print('!');
+			out.print(EMFUtils.getName(eo));
+			out.print(':');
 			final ReferenceModel mModel = getModelOf(eo).getReferenceModel();
-//			prettyPrint(out, eo.eClass());
 			String name = eo.eClass().getName();
 			out.print((String) nameByModel.get(mModel));
 			out.print('!');
 			if(name == null)
 				name = "<unnamed>";
 			out.print(name);
-			out.print('@');
-			out.print(getModelNameOf(eo));
 		} else if(value instanceof LinkedHashSet) {
 			out.print("OrderedSet {");
 			prettyPrintCollection(out, (Collection)value);
@@ -1460,12 +1461,7 @@ public class ExecEnv {
 		operationsByName.put("debug", new Operation(2) {
 			public Object exec(StackFrame frame) {
 				Object localVars[] = frame.localVars;
-//				out.println("Executed " + nbExecutedBytecodes + " bytecodes so far.");
-				logger.info(localVars[1] + ": " + localVars[0]);
-//				out.print(localVars[1]);
-//				out.print(": ");
-//				prettyPrint(localVars[0]);
-//				out.println();
+				logger.info(localVars[1] + ": " + toPrettyPrintedString(localVars[0]));
 				return localVars[0];
 			}
 		});
