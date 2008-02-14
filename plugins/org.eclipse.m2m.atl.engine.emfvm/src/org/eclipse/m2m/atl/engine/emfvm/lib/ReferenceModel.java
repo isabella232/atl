@@ -132,7 +132,7 @@ public class ReferenceModel extends Model {
 		if(metaElementByName == null) {
 			synchronized (this) {
 				if(metaElementByName == null) {
-					// check again, since another locking thread may have initialised 'classifiers'
+					// check again, since another locking thread may have initialised 'metaElementByName'
 					metaElementByName = initMetaElementsInAllResources();
 				}
 			}
@@ -154,19 +154,19 @@ public class ReferenceModel extends Model {
      * @author Dennis Wagelaar <dennis.wagelaar@vub.ac.be>
      */
 	private Map initMetaElementsInAllResources() {
-    	Map metaElementByName = new HashMap();
-    	initMetaElements(metaElementByName, resource.getContents().iterator(), null);
+    	Map eClassifiers = new HashMap();
+    	initMetaElements(eClassifiers, resource.getContents().iterator(), null);
         Iterator refResources = referencedResources.iterator();
         while (refResources.hasNext()) {
             initMetaElements(
-            		metaElementByName,
+            		eClassifiers,
                     ((Resource)refResources.next()).getContents().iterator(), 
                     null);
         }
-        return metaElementByName;
+        return eClassifiers;
 	}
 	
-	private static void initMetaElements(Map metaElementByName, Iterator i, String base) {
+	private static void initMetaElements(Map eClassifiers, Iterator i, String base) {
 		for( ; i.hasNext() ; ) {
 			EObject eo = (EObject)i.next();
 			if(eo instanceof EPackage) {
@@ -174,31 +174,31 @@ public class ReferenceModel extends Model {
 				if(base != null) {
 					name = base + "::" + name;
 				}
-				initMetaElements(metaElementByName, ((EPackage)eo).eContents().iterator(), name);
+				initMetaElements(eClassifiers, ((EPackage)eo).eContents().iterator(), name);
 			} else if(eo instanceof EClassifier) {
 				String name = ((EClassifier)eo).getName();
 				// register the classifier under its simple name
-				register(metaElementByName, name, eo);
+				register(eClassifiers, name, eo);
 				if(base != null) {
 					name = base + "::" + name;
 					// register the classifier under its full name
-					register(metaElementByName, name, eo);
+					register(eClassifiers, name, eo);
 				}
 			} else {
                 // No meta-package or meta-class => just keep digging.
                 // N.B. This situation occurs in UML2 profiles, where
                 // EPackages containing EClasses are buried somewhere
                 // underneath other elements.
-                initMetaElements(metaElementByName, eo.eContents().iterator(), base);
+                initMetaElements(eClassifiers, eo.eContents().iterator(), base);
             }
 		}
 	}
 	
-	private static void register(Map metaElementByName, String name, EObject classifier) {
-		if(metaElementByName.containsKey(name)) {
+	private static void register(Map eClassifiers, String name, EObject classifier) {
+		if(eClassifiers.containsKey(name)) {
 			logger.warning("metamodel contains several classifiers with same name: " + name);
 		}
-		metaElementByName.put(name, classifier);
+		eClassifiers.put(name, classifier);
 	}
 
     /**
