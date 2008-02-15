@@ -79,7 +79,9 @@ public class ASM {
 	// TODO:
 	//	- implements other options
 	//	- define options somewhere (currently, best definition is in regular VM)
-	public void run(Map models, Map libraries, List superimpose, Map options) {
+	public Object run(Map models, Map libraries, List superimpose, Map options) {
+		Object ret = null;
+
 		boolean printExecutionTime = "true".equals(options.get("printExecutionTime"));
 
 		long startTime = System.currentTimeMillis();
@@ -149,13 +151,15 @@ public class ASM {
             registerOperations(execEnv, module.operations);
         }
 
-		mainOperation.exec(frame);
+		ret = mainOperation.exec(frame);
 		long endTime = System.currentTimeMillis();
 		if(printExecutionTime)
 			logger.info("Executed " + name + " in " + ((endTime - startTime) / 1000.) + "s.");
 		
 		if("true".equals(options.get("showSummary")))
 			logger.info("Number of instructions executed: " + execEnv.nbExecutedBytecodes);
+		
+		return ret;
 	}
 	
 	public void registerOperations(ExecEnv execEnv, List operations) {

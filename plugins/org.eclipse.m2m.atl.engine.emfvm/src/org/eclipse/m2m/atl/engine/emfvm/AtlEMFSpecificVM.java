@@ -42,7 +42,9 @@ import org.eclipse.m2m.atl.engine.vm.nativelib.ASMModel;
 public class AtlEMFSpecificVM extends AtlVM {
 
 	// launch from Regular VM arguments (used for ant tasks)
-	public void launch(URL asmUrl, Map libs, Map models, Map params, List superimps, Map options) {
+	public Object launch(URL asmUrl, Map libs, Map models, Map params, List superimps, Map options) {
+		Object ret = null;
+
 		EMFUtils.setAllowInterModelReferences(!("true".equals(options.get("checkSameModel"))));
 		Map actualModels = new HashMap();
 		// handle metamodels first
@@ -100,7 +102,7 @@ public class AtlEMFSpecificVM extends AtlVM {
 			}
 			
 			try {
-				asm.run(actualModels, libs, superimpose, options);
+				ret = asm.run(actualModels, libs, superimpose, options);
 			} catch(VMException vme) {
 				vme.printStackTrace(System.out);
 				throw vme;
@@ -113,6 +115,8 @@ public class AtlEMFSpecificVM extends AtlVM {
 		} catch(IOException ioe) {
 			ioe.printStackTrace();
 		}
+
+		return ret;
 	}
 
 	// direct launch from debug plugin
