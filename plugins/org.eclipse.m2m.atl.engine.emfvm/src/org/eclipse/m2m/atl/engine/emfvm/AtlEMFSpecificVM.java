@@ -17,6 +17,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -40,6 +42,8 @@ import org.eclipse.m2m.atl.engine.vm.nativelib.ASMModel;
 //		- put extension point in engine plugin, not debug
 //		- make ant tasks independant of ASMModels (i.e., regular VM arguments)
 public class AtlEMFSpecificVM extends AtlVM {
+
+	protected static Logger logger = Logger.getLogger(EmfvmPlugin.LOGGER);
 
 	// launch from Regular VM arguments (used for ant tasks)
 	public Object launch(URL asmUrl, Map libs, Map models, Map params, List superimps, Map options) {
@@ -104,7 +108,7 @@ public class AtlEMFSpecificVM extends AtlVM {
 			try {
 				ret = asm.run(actualModels, libs, superimpose, options);
 			} catch(VMException vme) {
-				vme.printStackTrace(System.out);
+				logger.log(Level.SEVERE, vme.getLocalizedMessage(), vme);
 				throw vme;
 			}
 			
@@ -113,7 +117,7 @@ public class AtlEMFSpecificVM extends AtlVM {
 				model.commitToResource();
 			}
 		} catch(IOException ioe) {
-			ioe.printStackTrace();
+			logger.log(Level.SEVERE, ioe.getLocalizedMessage(), ioe);
 		}
 
 		return ret;
@@ -207,7 +211,7 @@ public class AtlEMFSpecificVM extends AtlVM {
 					m.save(URI.createPlatformResourceURI((String)modelPaths.get(mName), true));
 				}
 			} catch(VMException vme) {
-				vme.printStackTrace(System.out);
+				logger.log(Level.SEVERE, vme.getLocalizedMessage(), vme);
 				throw vme;
 			} finally {
 				for(Iterator i = models.values().iterator() ; i.hasNext() ; ) {
@@ -216,7 +220,7 @@ public class AtlEMFSpecificVM extends AtlVM {
 				}
 			}
 		} catch(IOException ioe) {
-			ioe.printStackTrace(System.out);
+			logger.log(Level.SEVERE, ioe.getLocalizedMessage(), ioe);
 		}
 
 
